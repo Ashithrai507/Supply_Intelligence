@@ -1,0 +1,11 @@
+id,name,supplier_type,contact_name,contact_email,contact_phone,address,city,state,is_approved
+301e3cd3-c948-49e9-add4-e8080a9fab7f,MedAxis Distributors,DISTRIBUTOR,Account Manager 1,sales1@supplier.synthetic,9100000000,50 Industrial Estate,Bengaluru,Karnataka,True
+1400ecad-7beb-4557-b782-a9b67dbfa3ea,HealthBridge Pharma,MANUFACTURER,Account Manager 2,sales2@supplier.synthetic,9100000001,51 Industrial Estate,Mangaluru,Karnataka,True
+85ba89f5-0cbe-423d-9b09-8edf117efeb7,NovaMed Supplies,WHOLESALER,Account Manager 3,sales3@supplier.synthetic,9100000002,52 Industrial Estate,Mysuru,Karnataka,True
+b55d3c34-369b-4934-9015-9e38109b79f2,PrimeCare Distributors,DISTRIBUTOR,Account Manager 4,sales4@supplier.synthetic,9100000003,53 Industrial Estate,Hubballi,Karnataka,True
+e692d4b3-4456-49eb-87f5-ee22fc6e4200,CureLink Pharma,MANUFACTURER,Account Manager 5,sales5@supplier.synthetic,9100000004,54 Industrial Estate,Kochi,Karnataka,True
+e6d69402-090c-458e-ab40-7589f32bf4bf,Apex Medical Logistics,WHOLESALER,Account Manager 6,sales6@supplier.synthetic,9100000005,55 Industrial Estate,Chennai,Karnataka,True
+43b13eff-affb-4e79-a137-2d676513f12b,Sterling Healthcare,DISTRIBUTOR,Account Manager 7,sales7@supplier.synthetic,9100000006,56 Industrial Estate,Hyderabad,Karnataka,True
+8a3cc937-5d2e-4b04-b961-e6372fb37757,WellSpring Pharma,MANUFACTURER,Account Manager 8,sales8@supplier.synthetic,9100000007,57 Industrial Estate,Pune,Karnataka,True
+389d9f94-94f3-497d-9ad3-80b154c36b08,MediRoute Supply,WHOLESALER,Account Manager 9,sales9@supplier.synthetic,9100000008,58 Industrial Estate,Bengaluru,Karnataka,True
+41e5f347-011f-49c8-a809-9ebc6ef93e37,VitaCore Distributors,DISTRIBUTOR,Account Manager 10,sales10@supplier.synthetic,9100000009,59 Industrial Estate,Mangaluru,Karnataka,True

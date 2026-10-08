@@ -1,0 +1,49 @@
+id,hospital_id,full_name,email,role,is_active
+24861d50-a5de-4386-84cd-c94fe6bc91b3,920ef48e-37f7-4885-9e7f-ef5f2970a521,Admin - Aster Valley Hospital,admin@920ef48e.synthetic,ADMIN,True
+e253acc8-e598-4343-828a-28acc186015a,920ef48e-37f7-4885-9e7f-ef5f2970a521,Pharmacy Manager - Aster Valley Hospital,pharmacy_manager@920ef48e.synthetic,PHARMACY_MANAGER,True
+f1e68ceb-abee-46e8-b4a3-d194ba5ba88f,920ef48e-37f7-4885-9e7f-ef5f2970a521,Procurement Manager - Aster Valley Hospital,procurement_manager@920ef48e.synthetic,PROCUREMENT_MANAGER,True
+16ae287b-b85d-4ec7-817b-1b20c504119b,920ef48e-37f7-4885-9e7f-ef5f2970a521,Inventory Manager - Aster Valley Hospital,inventory_manager@920ef48e.synthetic,INVENTORY_MANAGER,True
+d9804962-f1e7-40e6-894f-8ad015e8182d,920ef48e-37f7-4885-9e7f-ef5f2970a521,Analyst - Aster Valley Hospital,analyst@920ef48e.synthetic,ANALYST,True
+b1ee4118-3c4e-4445-ba34-696dd976aef5,920ef48e-37f7-4885-9e7f-ef5f2970a521,Viewer - Aster Valley Hospital,viewer@920ef48e.synthetic,VIEWER,True
+9dd8e5bc-8a19-4b50-ae97-613c62a18ede,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Admin - CityCare Multispeciality Hospital,admin@e9ce1e40.synthetic,ADMIN,True
+c56fe1a0-b5ca-43bd-8aa0-4490a14a05da,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Pharmacy Manager - CityCare Multispeciality Hospital,pharmacy_manager@e9ce1e40.synthetic,PHARMACY_MANAGER,True
+8cf03b89-bc40-40fa-96e6-333c58633c96,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Procurement Manager - CityCare Multispeciality Hospital,procurement_manager@e9ce1e40.synthetic,PROCUREMENT_MANAGER,True
+fbcff861-cccd-4959-94f8-f564d32f63f3,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Inventory Manager - CityCare Multispeciality Hospital,inventory_manager@e9ce1e40.synthetic,INVENTORY_MANAGER,True
+4f46640c-5006-4d6c-91ad-e56461c2e28a,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Analyst - CityCare Multispeciality Hospital,analyst@e9ce1e40.synthetic,ANALYST,True
+d7e6eea5-d9a5-4918-adbb-d84cfa0fad42,e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,Viewer - CityCare Multispeciality Hospital,viewer@e9ce1e40.synthetic,VIEWER,True
+c9c413fd-cf40-44e2-929d-de65d95cf7f3,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Admin - St Thomas Medical Centre,admin@e3bbe120.synthetic,ADMIN,True
+8984d324-1063-475e-aba4-c2c3f2b291a6,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Pharmacy Manager - St Thomas Medical Centre,pharmacy_manager@e3bbe120.synthetic,PHARMACY_MANAGER,True
+c05d9bd4-3d43-439d-8331-86254396b357,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Procurement Manager - St Thomas Medical Centre,procurement_manager@e3bbe120.synthetic,PROCUREMENT_MANAGER,True
+b2d4d890-ef94-4d60-bd28-1986e404a1c2,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Inventory Manager - St Thomas Medical Centre,inventory_manager@e3bbe120.synthetic,INVENTORY_MANAGER,True
+a6b92b83-d0d3-4a76-9fe1-7958d545cfe0,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Analyst - St Thomas Medical Centre,analyst@e3bbe120.synthetic,ANALYST,True
+2464665b-743a-4486-90a0-0b1cbadcad1b,e3bbe120-0a9b-4cd8-b137-17f5c377e253,Viewer - St Thomas Medical Centre,viewer@e3bbe120.synthetic,VIEWER,True
+f50a4325-4584-4f03-af64-791915860b62,08edb0d0-edbf-44ce-9d32-b74a11e02048,Admin - Sahyadri General Hospital,admin@08edb0d0.synthetic,ADMIN,True
+0059fa54-5841-4478-85f4-d01d93d6d4d1,08edb0d0-edbf-44ce-9d32-b74a11e02048,Pharmacy Manager - Sahyadri General Hospital,pharmacy_manager@08edb0d0.synthetic,PHARMACY_MANAGER,True
+7e0ba309-f0eb-4e4d-a100-2a115df010cc,08edb0d0-edbf-44ce-9d32-b74a11e02048,Procurement Manager - Sahyadri General Hospital,procurement_manager@08edb0d0.synthetic,PROCUREMENT_MANAGER,True
+42c3ef9d-c6e9-46ef-a3d5-ad24382c8c8c,08edb0d0-edbf-44ce-9d32-b74a11e02048,Inventory Manager - Sahyadri General Hospital,inventory_manager@08edb0d0.synthetic,INVENTORY_MANAGER,True
+5eeaf6b6-0279-420c-83e0-5c94615dd2c2,08edb0d0-edbf-44ce-9d32-b74a11e02048,Analyst - Sahyadri General Hospital,analyst@08edb0d0.synthetic,ANALYST,True
+42fb5d00-c6d9-494b-9b7f-701e73d555c2,08edb0d0-edbf-44ce-9d32-b74a11e02048,Viewer - Sahyadri General Hospital,viewer@08edb0d0.synthetic,VIEWER,True
+3a0a669d-1d20-4d9e-ad3e-7172aa95c172,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Admin - Lifeline Institute,admin@a7373a90.synthetic,ADMIN,True
+06b9326f-cb6b-449b-ad53-0e678eb799b0,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Pharmacy Manager - Lifeline Institute,pharmacy_manager@a7373a90.synthetic,PHARMACY_MANAGER,True
+dcd79dce-8180-48dd-a86c-8d286cb15b69,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Procurement Manager - Lifeline Institute,procurement_manager@a7373a90.synthetic,PROCUREMENT_MANAGER,True
+ccc427f1-1480-41fe-8bd0-4e5bda69ecca,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Inventory Manager - Lifeline Institute,inventory_manager@a7373a90.synthetic,INVENTORY_MANAGER,True
+445e02fc-98b0-48a9-a0a1-51f13d6b418a,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Analyst - Lifeline Institute,analyst@a7373a90.synthetic,ANALYST,True
+b698115e-62ed-4b08-8127-f74bb17a9526,a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Viewer - Lifeline Institute,viewer@a7373a90.synthetic,VIEWER,True
+4781f22e-a843-45fd-a3ca-e409eb39cda9,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Admin - Metro Health Hospital,admin@85ae4cf3.synthetic,ADMIN,True
+c138e372-da64-4305-9d1f-8a41ff31d5e7,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Pharmacy Manager - Metro Health Hospital,pharmacy_manager@85ae4cf3.synthetic,PHARMACY_MANAGER,True
+767a1c13-65e2-4f56-bf1b-38d3bd0460ff,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Procurement Manager - Metro Health Hospital,procurement_manager@85ae4cf3.synthetic,PROCUREMENT_MANAGER,True
+c5eaa78d-f978-4426-8451-b38f2e4a893d,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Inventory Manager - Metro Health Hospital,inventory_manager@85ae4cf3.synthetic,INVENTORY_MANAGER,True
+a7389364-2d91-4460-b361-c712f1bfb17d,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Analyst - Metro Health Hospital,analyst@85ae4cf3.synthetic,ANALYST,True
+bc451be4-aa8e-43ee-9563-15876051f26e,85ae4cf3-51bf-45d7-8011-bb994eb602a6,Viewer - Metro Health Hospital,viewer@85ae4cf3.synthetic,VIEWER,True
+77a4b9dc-6359-4f82-ae01-37b143258536,9454a900-be26-4a3d-ad53-b449210cffb4,Admin - Nirmala Care Hospital,admin@9454a900.synthetic,ADMIN,True
+031b295b-ce8b-4fb6-9b74-3930cea6c5c0,9454a900-be26-4a3d-ad53-b449210cffb4,Pharmacy Manager - Nirmala Care Hospital,pharmacy_manager@9454a900.synthetic,PHARMACY_MANAGER,True
+5e07daa8-0fd5-47c9-b3c3-1dfbc731f114,9454a900-be26-4a3d-ad53-b449210cffb4,Procurement Manager - Nirmala Care Hospital,procurement_manager@9454a900.synthetic,PROCUREMENT_MANAGER,True
+80870e15-0c2d-4ca1-ade2-a1d3292930c0,9454a900-be26-4a3d-ad53-b449210cffb4,Inventory Manager - Nirmala Care Hospital,inventory_manager@9454a900.synthetic,INVENTORY_MANAGER,True
+2a041458-6c42-459e-ada7-ff9f9b62cc45,9454a900-be26-4a3d-ad53-b449210cffb4,Analyst - Nirmala Care Hospital,analyst@9454a900.synthetic,ANALYST,True
+1c49c799-8f27-4c0f-8ffa-74dc6ab23d2c,9454a900-be26-4a3d-ad53-b449210cffb4,Viewer - Nirmala Care Hospital,viewer@9454a900.synthetic,VIEWER,True
+a04cbcf9-ff1d-4235-b41f-8f8b59052f14,0d84597b-6ea1-4332-bd4a-8451cde06855,Admin - Sunrise Specialty Hospital,admin@0d84597b.synthetic,ADMIN,True
+0b804035-56ce-4184-a667-dbf4cbf5550a,0d84597b-6ea1-4332-bd4a-8451cde06855,Pharmacy Manager - Sunrise Specialty Hospital,pharmacy_manager@0d84597b.synthetic,PHARMACY_MANAGER,True
+38161e71-6dbf-48a3-9696-6a766d0ddd15,0d84597b-6ea1-4332-bd4a-8451cde06855,Procurement Manager - Sunrise Specialty Hospital,procurement_manager@0d84597b.synthetic,PROCUREMENT_MANAGER,True
+baa4ff18-ba20-424e-9876-93f968739436,0d84597b-6ea1-4332-bd4a-8451cde06855,Inventory Manager - Sunrise Specialty Hospital,inventory_manager@0d84597b.synthetic,INVENTORY_MANAGER,True
+58619f85-2a66-4f2b-b188-311bae3d464f,0d84597b-6ea1-4332-bd4a-8451cde06855,Analyst - Sunrise Specialty Hospital,analyst@0d84597b.synthetic,ANALYST,True
+c587f8d6-b8cc-40c0-86eb-81776368f528,0d84597b-6ea1-4332-bd4a-8451cde06855,Viewer - Sunrise Specialty Hospital,viewer@0d84597b.synthetic,VIEWER,True
