@@ -4,6 +4,7 @@ import {
   CircleCheck,
   Clock,
   HeartHandshake,
+  IndianRupee,
   MapPin,
   Navigation,
   Package,
@@ -67,6 +68,12 @@ function transportLabel(o: DemoOffer): string {
   return o.etaHours != null ? `Pickup needed, ~${o.etaHours}h (${route})` : `Pickup needed (${route})`;
 }
 
+function formatCost(cost: number | null): string {
+  if (cost == null) return "Cost not shared";
+  if (cost === 0) return "Free donation";
+  return `₹${cost.toLocaleString("en-IN")}`;
+}
+
 /** Requests page: network board + click-through detail with grant/help offers. */
 export default function Requests() {
   const { user } = useAuth();
@@ -89,6 +96,7 @@ export default function Requests() {
   // Offer form state (inside the detail modal, behind the Grant Help button).
   const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerQty, setOfferQty] = useState("");
+  const [offerCost, setOfferCost] = useState("");
   const [offerTransport, setOfferTransport] = useState(false);
   const [offerEta, setOfferEta] = useState("");
   const [offerError, setOfferError] = useState<string | null>(null);
@@ -129,6 +137,7 @@ export default function Requests() {
     setSelectedId(id);
     setOfferFormOpen(false);
     setOfferQty("");
+    setOfferCost("");
     setOfferTransport(false);
     setOfferEta("");
     setOfferError(null);
@@ -173,6 +182,11 @@ export default function Requests() {
       setOfferError("Quantity must be a positive number.");
       return;
     }
+    const cost = Number(offerCost);
+    if (!Number.isFinite(cost) || cost < 0) {
+      setOfferError("Enter the estimated cost in ₹ (0 if it is a free donation).");
+      return;
+    }
     const eta = offerTransport ? 1 : Number(offerEta);
     if (!offerTransport && (!Number.isFinite(eta) || eta <= 0)) {
       setOfferError("Enter when transport can reach (hours), or tick immediate transport.");
@@ -191,12 +205,14 @@ export default function Requests() {
         distanceKm: route.distanceKm,
         traffic: route.traffic,
         travelMinutes: route.travelMinutes,
+        estimatedCost: Math.round(cost),
         date: today,
         note: offerTransport ? "Vehicle ready now" : "Needs pickup arrangement",
       },
       ...prev,
     ]);
     setOfferQty("");
+    setOfferCost("");
     setOfferTransport(false);
     setOfferEta("");
     setOfferError(null);
@@ -204,6 +220,8 @@ export default function Requests() {
   }
 
   const coveragePct = selected ? Math.min(100, Math.round((offeredQty / selected.quantity) * 100)) : 0;
+  const totalCost = selectedOffers.reduce((s, o) => s + (o.estimatedCost ?? 0), 0);
+  const hasAnyCost = selectedOffers.some((o) => o.estimatedCost != null);
 
   return (
     <div className="pb-20">
@@ -365,6 +383,11 @@ export default function Requests() {
               <section className="flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:overflow-hidden">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <h4 className="text-sm font-bold text-slate-900">Offers ({selectedOffers.length})</h4>
+                  {hasAnyCost && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
+                      <IndianRupee size={12} /> {totalCost.toLocaleString("en-IN")} total est.
+                    </span>
+                  )}
                   {selected.hospital !== requester && (
                     <button
                       type="button"
@@ -396,6 +419,17 @@ export default function Requests() {
                           placeholder="e.g. 500"
                           value={offerQty}
                           onChange={(e) => setOfferQty(e.target.value)}
+                        />
+                      </label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Estimated cost (₹)
+                        <input
+                          className={`${inputCls} mt-1`}
+                          type="number"
+                          min={0}
+                          placeholder="e.g. 4500 (0 if free)"
+                          value={offerCost}
+                          onChange={(e) => setOfferCost(e.target.value)}
                         />
                       </label>
                       <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-2.5 py-2 text-sm ring-1 ring-slate-200">
@@ -460,6 +494,9 @@ export default function Requests() {
                             </span>
                           </div>
                           <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                              <IndianRupee size={12} /> {formatCost(o.estimatedCost)}
+                            </span>
                             <span
                               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                                 o.canTransportImmediately
