@@ -6,7 +6,8 @@
 > before/after impact simulator.
 
 Built for **Singularity 2026 Hackathon** (20-hour build). See **[PLAN.md](PLAN.md)** for
-the full implementation plan.
+the full implementation plan and **[WORKPLAN.md](WORKPLAN.md)** for the Phase 1 backend
+work split between team members.
 
 ## The chain judges see
 
@@ -46,6 +47,20 @@ Dashboard + AI Operations Copilot
 | 9 | **Dashboard** | Command center: KPIs, alerts, recommended actions, forecast graph, network map |
 | 10 | **AI Operations Copilot** *(bonus)* | LLM grounded on computed results: "Which hospitals are at highest risk next week?" |
 
+## Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Language | **Python 3.11+** | One language for data, ML, and API |
+| API | **FastAPI** + Uvicorn + Pydantic | Typed contract, auto OpenAPI docs for the UI |
+| ML / forecasting | **LightGBM** (quantile loss), pandas, NumPy, scikit-learn | Explainable, fast, handles mixed features + metrics |
+| Optimization | **PuLP** (+ CBC solver) | Simple LP modeling, ships with a free solver |
+| Data storage | **Parquet** (pandas/pyarrow) in `data/generated/`, seeded | No DB server needed; reproducible |
+| Testing | **pytest** | Unit + integration tests per workstream |
+| LLM | OpenAI-compatible API (copilot, built last) | Grounded on computed results JSON |
+| Frontend *(Phase 2)* | **React + Vite + Tailwind CSS**, **Recharts**, **Leaflet** | Fast dashboard, forecast charts, network map |
+| Tooling | Git/GitHub, `venv`/`pip`, Ruff (lint) | Minimal setup |
+
 ## Architecture
 
 - **`backend/`** — FastAPI monolith. Everything is a pure function of
@@ -77,8 +92,9 @@ Dashboard + AI Operations Copilot
 
 ## Status
 
-Planning complete — not yet implemented. Start with `scripts/generate_data.py`
-(generator → forecasting → engines → optimizer → dashboard, per PLAN.md §7).
+**Phase 1 (backend) planned** — see [WORKPLAN.md](WORKPLAN.md) for task ownership and
+milestones M1–M6. Not yet implemented; starts with scaffold + API contract (M1), then
+data generator → forecasting → optimizer → integration. UI begins at M6.
 
 > Decision-support prototype for a hackathon demo. **Not a clinical system** — no
 > medical accuracy claims.
