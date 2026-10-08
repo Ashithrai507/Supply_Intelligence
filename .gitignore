@@ -18,13 +18,16 @@ __pycache__/
 .env
 .env.local
 
+# Databases
+*.db
+data/*.db
+
+# Archives
+*.zip
+
 # Generated data & model artifacts
 data/generated/
-backend/ml/artifacts/*.joblib
-backend/ml/artifacts/*.txt
-
-# Archives & Zip uploads
-*.zip
+backend/ml/artifacts/
 
 # Supabase local state
 supabase/.temp/
@@ -34,3 +37,5 @@ supabase/.branches/
 node_modules/
 dist/
 
+# macOS
+.DS_Store

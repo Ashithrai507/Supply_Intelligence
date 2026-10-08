@@ -1,7 +1,21 @@
-"""SQLAlchemy models (project.md §10, §11).
+"""SQLAlchemy models for MedPredict."""
 
-Mirrors of the Supabase schema — the Supabase CLI migrations in
-``supabase/migrations/`` are the single source of truth; tables are defined
-here for backend query access (issue #16 wiring). Table definitions follow
-``project.md`` §12.
-"""
+from app.models.entities import (
+    DemandHistory,
+    Hospital,
+    InventoryBatch,
+    Medicine,
+    PurchaseOrder,
+    SupplierMedicine,
+    SupplySource,
+)
+
+__all__ = [
+    "Hospital",
+    "Medicine",
+    "SupplySource",
+    "SupplierMedicine",
+    "DemandHistory",
+    "InventoryBatch",
+    "PurchaseOrder",
+]

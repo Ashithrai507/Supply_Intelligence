@@ -1,0 +1,51 @@
+medicine_id,medicine_name,category,unit,criticality_level
+M001,Medicine 001,Analgesic,vial,LOW
+M002,Medicine 002,Antibiotic,tablet,MEDIUM
+M003,Medicine 003,Antipyretic,tablet,LOW
+M004,Medicine 004,Antidiabetic,vial,MEDIUM
+M005,Medicine 005,Cardiac,tablet,HIGH
+M006,Medicine 006,Emergency,tablet,HIGH
+M007,Medicine 007,IV Fluid,vial,HIGH
+M008,Medicine 008,Respiratory,tablet,MEDIUM
+M009,Medicine 009,Antiseptic,tablet,LOW
+M010,Medicine 010,Other,vial,LOW
+M011,Medicine 011,Analgesic,tablet,LOW
+M012,Medicine 012,Antibiotic,tablet,MEDIUM
+M013,Medicine 013,Antipyretic,vial,LOW
+M014,Medicine 014,Antidiabetic,tablet,MEDIUM
+M015,Medicine 015,Cardiac,tablet,HIGH
+M016,Medicine 016,Emergency,vial,HIGH
+M017,Medicine 017,IV Fluid,tablet,HIGH
+M018,Medicine 018,Respiratory,tablet,MEDIUM
+M019,Medicine 019,Antiseptic,vial,LOW
+M020,Medicine 020,Other,tablet,LOW
+M021,Medicine 021,Analgesic,tablet,LOW
+M022,Medicine 022,Antibiotic,vial,MEDIUM
+M023,Medicine 023,Antipyretic,tablet,LOW
+M024,Medicine 024,Antidiabetic,tablet,MEDIUM
+M025,Medicine 025,Cardiac,vial,HIGH
+M026,Medicine 026,Emergency,tablet,HIGH
+M027,Medicine 027,IV Fluid,tablet,HIGH
+M028,Medicine 028,Respiratory,vial,MEDIUM
+M029,Medicine 029,Antiseptic,tablet,LOW
+M030,Medicine 030,Other,tablet,LOW
+M031,Medicine 031,Analgesic,vial,LOW
+M032,Medicine 032,Antibiotic,tablet,MEDIUM
+M033,Medicine 033,Antipyretic,tablet,LOW
+M034,Medicine 034,Antidiabetic,vial,MEDIUM
+M035,Medicine 035,Cardiac,tablet,HIGH
+M036,Medicine 036,Emergency,tablet,HIGH
+M037,Medicine 037,IV Fluid,vial,HIGH
+M038,Medicine 038,Respiratory,tablet,MEDIUM
+M039,Medicine 039,Antiseptic,tablet,LOW
+M040,Medicine 040,Other,vial,LOW
+M041,Medicine 041,Analgesic,tablet,LOW
+M042,Medicine 042,Antibiotic,tablet,MEDIUM
+M043,Medicine 043,Antipyretic,vial,LOW
+M044,Medicine 044,Antidiabetic,tablet,MEDIUM
+M045,Medicine 045,Cardiac,tablet,HIGH
+M046,Medicine 046,Emergency,vial,HIGH
+M047,Medicine 047,IV Fluid,tablet,HIGH
+M048,Medicine 048,Respiratory,tablet,MEDIUM
+M049,Medicine 049,Antiseptic,vial,LOW
+M050,Medicine 050,Other,tablet,LOW

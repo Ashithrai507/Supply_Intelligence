@@ -24,7 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -40,7 +40,7 @@ DEFAULT_END_DATE = date(2026, 9, 30)  # fixed (not "today") so reruns are identi
 DEFAULT_N_FACILITIES = 20
 DEFAULT_N_MEDICINES = 40
 
-CREATED_AT = datetime(2026, 9, 30, 12, 0, 0, tzinfo=timezone.utc)
+CREATED_AT = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
 
 # Authoritative column order per project.md §12 (+ migrations).
 EXPECTED_COLUMNS: dict[str, list[str]] = {

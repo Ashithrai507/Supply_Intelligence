@@ -1,0 +1,9 @@
+hospital_id,hospital_name,city,bed_capacity,avg_daily_patients
+H01,Hospital A,Bengaluru,250,180
+H02,Hospital B,Mangaluru,400,300
+H03,Hospital C,Mysuru,180,120
+H04,Hospital D,Hubballi,600,450
+H05,Hospital E,Bengaluru,320,240
+H06,Hospital F,Mangaluru,220,160
+H07,Hospital G,Mysuru,450,350
+H08,Hospital H,Hubballi,150,100

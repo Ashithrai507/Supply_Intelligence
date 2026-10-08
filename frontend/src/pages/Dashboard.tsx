@@ -1,384 +1,411 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { api, demoState, riskOf, type InventoryRow, type ForecastRow } from "../api/client";
-import DemoBadge from "../components/DemoBadge";
+import {
+  AlertTriangle,
+  ArrowLeftRight,
+  ArrowRight,
+  Boxes,
+  Building2,
+  CalendarClock,
+  ChevronRight,
+  ClipboardList,
+  ShieldAlert,
+  Sparkles,
+  TrendingUp,
+  Truck,
+} from "lucide-react";
+import { riskOf } from "../api/client";
+import {
+  DEMO_FORECASTS,
+  DEMO_INVENTORY,
+  DEMO_PRIORITIES,
+  DEMO_REQUESTS,
+  DEMO_TRANSFERS,
+} from "../api/mockData";
+import { useAuth } from "../context/AuthContext";
 import RiskBadge from "../components/RiskBadge";
-import { useHospital } from "../context/HospitalContext";
 
-const SCENARIOS = [
-  { id: "normal", name: "Normal Operation" },
-  { id: "outbreak", name: "Outbreak (+70% Demand)" },
-  { id: "delay", name: "Supplier Delay (+5d)" },
-  { id: "crisis", name: "Combined Crisis" },
-];
+function daysToExpiry(expiryDate: string): number {
+  return Math.floor((new Date(expiryDate).getTime() - Date.now()) / 86400000);
+}
 
 export default function Dashboard() {
-  const { activeHospitalId, activeHospital, isNetworkView } = useHospital();
+  const { user } = useAuth();
+  const currentHospitalName = user?.name ?? "City General Hospital";
 
-  const [inventory, setInventory] = useState<InventoryRow[]>([]);
-  const [forecasts, setForecasts] = useState<ForecastRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
-  const [scenario, setScenario] = useState("normal");
-  const [selectedTransfer, setSelectedTransfer] = useState<number | null>(null);
+  // Filter strictly to logged-in organization
+  const scopedInventory = useMemo(
+    () => DEMO_INVENTORY.filter((r) => r.hospital === currentHospitalName),
+    [currentHospitalName],
+  );
 
-  useEffect(() => {
-    Promise.all([api.getInventory(), api.getForecast()])
-      .then(([invData, fcData]) => {
-        setInventory(invData);
-        setForecasts(fcData);
-        setIsDemo(demoState.active);
-      })
-      .catch((err) => console.error("Dashboard error:", err))
-      .finally(() => setLoading(false));
-  }, []);
+  const scopedForecasts = useMemo(
+    () => DEMO_FORECASTS.filter((r) => r.hospital_name === currentHospitalName),
+    [currentHospitalName],
+  );
 
-  // Filter dataset by active hospital account scope
-  const scopedInventory = isNetworkView
-    ? inventory
-    : inventory.filter((r) => r.hospital_id === activeHospitalId);
+  const scopedTransfers = useMemo(
+    () =>
+      DEMO_TRANSFERS.filter(
+        (t) => t.from === currentHospitalName || t.to === currentHospitalName,
+      ),
+    [currentHospitalName],
+  );
 
-  const scopedForecasts = isNetworkView
-    ? forecasts
-    : forecasts.filter((f) => f.hospital_id === activeHospitalId);
+  const scopedPriority = useMemo(
+    () => DEMO_PRIORITIES.find((p) => p.hospital === currentHospitalName),
+    [currentHospitalName],
+  );
 
-  const criticalItems = scopedInventory.filter((r) => riskOf(r.days_left) === "Critical");
-  const highRiskItems = scopedInventory.filter((r) => riskOf(r.days_left) === "High");
-  const expiringSoon = scopedInventory.filter((r) => {
-    const days = Math.floor((new Date(r.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return days <= 30;
-  });
+  const critical = scopedInventory.filter((r) => riskOf(r.days_left) === "Critical");
+  const atRisk = scopedInventory.filter((r) => (r.days_left ?? 999) <= 14).length;
+  const expiry = scopedInventory.filter((r) => daysToExpiry(r.expiry_date) <= 14).length;
 
-  // transfers mock dataset with hospital mapping
-  const allTransfers = [
+  const totalStockUnits = scopedInventory.reduce((acc, r) => acc + r.current_quantity, 0);
+
+  const cards = [
     {
-      id: 1,
-      from: "Riverside District Hospital",
-      fromId: "h2",
-      to: "City General Hospital",
-      toId: "h1",
-      medicine: "Amoxicillin",
-      qty: 1200,
-      distanceKm: 18,
-      urgency: "High",
-      why: "City General runs out in 2.1 days. Riverside has 8,000 units surplus.",
+      to: "/shortage-risk",
+      title: "Critical Shortages",
+      value: String(critical.length),
+      hint: `${atRisk} medicines under 14 days of supply`,
+      accent: "rose",
+      gradient: "from-rose-500 to-red-600",
+      iconBg: "bg-rose-500 text-white",
+      badgeText: critical.length > 0 ? "Action Required" : "All Clear",
+      badgeColor:
+        critical.length > 0
+          ? "bg-rose-100 text-rose-700 border-rose-200"
+          : "bg-emerald-100 text-emerald-700 border-emerald-200",
+      icon: AlertTriangle,
     },
     {
-      id: 2,
-      from: "St. Mary's Tertiary Care",
-      fromId: "h3",
-      to: "Riverside District Hospital",
-      toId: "h2",
-      medicine: "Insulin Glargine",
-      qty: 400,
-      distanceKm: 24,
-      urgency: "Critical",
-      why: "Riverside has 0 units in stock. St. Mary's has 1,200 units available.",
+      to: "/forecast",
+      title: "Demand Projections",
+      value: String(scopedForecasts.length),
+      hint: "AI predictive surge models active for your facility",
+      accent: "indigo",
+      gradient: "from-indigo-500 to-blue-600",
+      iconBg: "bg-indigo-600 text-white",
+      badgeText: "AI 14-Day Model",
+      badgeColor: "bg-indigo-100 text-indigo-700 border-indigo-200",
+      icon: TrendingUp,
     },
     {
-      id: 3,
-      from: "Riverside District Hospital",
-      fromId: "h2",
-      to: "Lakeside Community Clinic",
-      toId: "h4",
-      medicine: "Paracetamol",
-      qty: 800,
-      distanceKm: 12,
-      urgency: "Medium",
-      why: "Lakeside runs out in 6.3 days. Transfer resolves stockout risk.",
+      to: "/inventory",
+      title: "Facility Stock Units",
+      value: `${(totalStockUnits / 1000).toFixed(1)}k`,
+      hint: `${scopedInventory.length} medicines monitored in your formulary`,
+      accent: "emerald",
+      gradient: "from-emerald-500 to-teal-600",
+      iconBg: "bg-emerald-600 text-white",
+      badgeText: "Real-time Telemetry",
+      badgeColor: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      icon: Boxes,
     },
     {
-      id: 4,
-      from: "St. Mary's Tertiary Care",
-      fromId: "h3",
-      to: "City General Hospital",
-      toId: "h1",
-      medicine: "Insulin Glargine",
-      qty: 250,
-      distanceKm: 20,
-      urgency: "Critical",
-      why: "City General runs out in 3.7 days. St. Mary's has available inventory batch.",
+      to: "/expiry-risk",
+      title: "Expiry & Wastage Risk",
+      value: String(expiry),
+      hint: "Formulary batches expiring in ≤14 days",
+      accent: "amber",
+      gradient: "from-amber-500 to-orange-600",
+      iconBg: "bg-amber-500 text-white",
+      badgeText: "Surplus Detection",
+      badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+      icon: CalendarClock,
+    },
+    {
+      to: "/redistribution",
+      title: "Active Transfers",
+      value: String(scopedTransfers.length),
+      hint: "Incoming or outgoing peer shipments",
+      accent: "sky",
+      gradient: "from-sky-500 to-blue-600",
+      iconBg: "bg-sky-600 text-white",
+      badgeText: "Peer Net",
+      badgeColor: "bg-sky-100 text-sky-800 border-sky-200",
+      icon: ArrowLeftRight,
+    },
+    {
+      to: "/priority",
+      title: "Network Priority Score",
+      value: scopedPriority ? `${scopedPriority.score}/100` : "75/100",
+      hint: `Urgency tier: ${scopedPriority?.level ?? "Monitored"}`,
+      accent: "purple",
+      gradient: "from-purple-500 to-fuchsia-600",
+      iconBg: "bg-purple-600 text-white",
+      badgeText: scopedPriority?.level ?? "Active",
+      badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
+      icon: ShieldAlert,
+    },
+    {
+      to: "/requests",
+      title: "Supply Requests",
+      value: String(DEMO_REQUESTS.filter((r) => r.status === "Pending").length),
+      hint: `${DEMO_REQUESTS.length} facility requests logged`,
+      accent: "teal",
+      gradient: "from-teal-500 to-cyan-600",
+      iconBg: "bg-teal-600 text-white",
+      badgeText: "Facility Inbox",
+      badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
+      icon: ClipboardList,
     },
   ];
 
-  // Scoped transfers (incoming or outgoing for the selected hospital account)
-  const scopedTransfers = isNetworkView
-    ? allTransfers
-    : allTransfers.filter((t) => t.fromId === activeHospitalId || t.toId === activeHospitalId);
-
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-500">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-          <span>Loading Facility Intelligence Dashboard…</span>
-        </div>
-      </div>
-    );
-  }
-
-  const facilityName = isNetworkView ? "All Regional Facilities" : activeHospital?.name;
-
   return (
     <div className="space-y-6">
-      {/* Facility Header Banner */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-lg">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-xs font-semibold text-indigo-300 ring-1 ring-inset ring-indigo-400/30">
-              {isNetworkView ? "🌐 Network Admin View" : `🏥 ${activeHospital?.name}`}
-            </span>
-            {isDemo && <DemoBadge />}
-          </div>
-          <h2 className="mt-2 font-['Outfit',sans-serif] text-2xl font-bold tracking-tight">
-            {facilityName} Dashboard
-          </h2>
-          <p className="mt-1 text-sm text-slate-300">
-            {isNetworkView
-              ? "Regional medical supply early warning & network redistribution optimizer."
-              : `Facility-scoped stock monitoring, consumption forecasting & transfer actions for ${activeHospital?.name}.`}
-          </p>
-        </div>
+      {/* Organization Hero Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl shadow-indigo-950/10">
+        <div className="absolute -top-12 -right-12 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute -bottom-12 -left-12 h-64 w-64 rounded-full bg-cyan-500/15 blur-3xl" />
 
-        {/* Scenario Toggle */}
-        <div className="flex flex-col gap-1 sm:items-end">
-          <span className="text-xs font-medium text-slate-300">Simulator Scenario:</span>
-          <div className="flex flex-wrap gap-1 rounded-xl bg-slate-800/80 p-1 border border-slate-700/60">
-            {SCENARIOS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setScenario(s.id)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
-                  scenario === s.id
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                }`}
-              >
-                {s.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Cards Grid (Scoped to Hospital) */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              {isNetworkView ? "Monitored Facilities" : "Account Scope"}
-            </span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">🏥</span>
-          </div>
-          <p className="mt-2 font-['Outfit',sans-serif] text-xl font-bold text-slate-900 truncate">
-            {isNetworkView ? "4 Hospitals" : activeHospital?.name}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">{activeHospital?.type ?? "Network Overview"}</p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tracked Medicine Batches</span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">📦</span>
-          </div>
-          <p className="mt-2 font-['Outfit',sans-serif] text-3xl font-bold text-slate-900">{scopedInventory.length}</p>
-          <p className="mt-1 text-xs text-slate-500">Facility inventory records</p>
-        </div>
-
-        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/50 p-5 shadow-xs hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-rose-700">Critical Shortages</span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">🚨</span>
-          </div>
-          <p className="mt-2 font-['Outfit',sans-serif] text-3xl font-bold text-rose-900">{criticalItems.length}</p>
-          <p className="mt-1 text-xs text-rose-600">Runs out in &lt; 3 days</p>
-        </div>
-
-        <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-5 shadow-xs hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-700">Expiry Risk Batches</span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">⏳</span>
-          </div>
-          <p className="mt-2 font-['Outfit',sans-serif] text-3xl font-bold text-amber-900">{expiringSoon.length}</p>
-          <p className="mt-1 text-xs text-amber-600">Expiring within 30 days</p>
-        </div>
-      </div>
-
-      {/* Main Grid: Alerts + Recommendations */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Scoped Hospital Alerts (2 cols) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-['Outfit',sans-serif] text-base font-bold text-slate-900 flex items-center gap-2">
-                  <span>🚨</span> Critical Shortages — {facilityName}
-                </h3>
-                <p className="text-xs text-slate-500">Medicines facing imminent stockouts at this facility</p>
-              </div>
-              <Link to="/inventory" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                View full facility inventory →
-              </Link>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="max-w-2xl space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-200 backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Organization Telemetry Scope • {user?.code ?? "FACILITY"}</span>
             </div>
-
-            {criticalItems.concat(highRiskItems).length === 0 ? (
-              <div className="p-6 text-center text-xs text-emerald-700 bg-emerald-50/50 rounded-xl border border-emerald-200/80">
-                ✅ No critical shortages currently flagged for {facilityName}.
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {criticalItems.concat(highRiskItems).slice(0, 6).map((item) => (
-                  <div key={`${item.hospital_id}-${item.medicine_id}`} className="py-3 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{item.medicine}</p>
-                      <p className="text-xs text-slate-500 truncate">{item.hospital}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-right">
-                        <p className="text-xs font-semibold text-slate-900">{item.current_quantity.toLocaleString()} units</p>
-                        <p className="text-[11px] text-slate-500">
-                          {item.days_left != null ? `${item.days_left.toFixed(1)} days left` : 'No stock'}
-                        </p>
-                      </div>
-                      <RiskBadge level={riskOf(item.days_left)} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Forecast Spikes for Scoped Hospital */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-['Outfit',sans-serif] text-base font-bold text-slate-900 flex items-center gap-2">
-                  <span>📈</span> Demand Forecast Spikes — {facilityName}
-                </h3>
-                <p className="text-xs text-slate-500">Predicted daily demand and growth rate</p>
-              </div>
-              <Link to="/forecast" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                View detailed forecast chart →
-              </Link>
-            </div>
-
-            {scopedForecasts.length === 0 ? (
-              <p className="text-xs text-slate-500 p-4">Select a medicine in the forecast page to generate predictions.</p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {scopedForecasts.map((f) => (
-                  <div key={`${f.hospital_id}-${f.medicine_id}`} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-slate-600 truncate">{f.hospital_name}</span>
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${f.trend_growth_pct > 15 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                        +{f.trend_growth_pct.toFixed(1)}% ↑
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm font-bold text-slate-900">{f.medicine_name}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Predicted: <span className="font-semibold text-slate-800">{f.predicted_daily_demand.toFixed(0)}</span> units/day
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Hospital-Scoped Transfers Sidebar */}
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-b from-indigo-50/50 to-white p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-['Outfit',sans-serif] text-base font-bold text-slate-900 flex items-center gap-2">
-                <span>🔄</span> Facility Redistribution
-              </h3>
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">
-                OR-Tools LP
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 mb-4">
-              {isNetworkView
-                ? "All active network transfer recommendations."
-                : `Transfers allocated for ${activeHospital?.name} (Incoming & Outgoing).`}
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              {currentHospitalName}
+            </h1>
+            <p className="text-sm text-slate-300">
+              Welcome, <strong className="text-white">{user?.userName}</strong> ({user?.role}). Viewing inventory telemetry, risk signals, and redistribution recommendations scoped to your organization.
             </p>
+          </div>
 
-            {scopedTransfers.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 rounded-xl">
-                No active transfer requests for this facility.
+          {/* Hospital Profile Quick Pill */}
+          <div className="rounded-xl border border-white/10 bg-white/10 p-3.5 backdrop-blur-md text-xs space-y-1.5 shrink-0">
+            <div className="flex items-center gap-2 font-bold text-white">
+              <Building2 className="h-4 w-4 text-cyan-400" />
+              <span>{user?.tier ?? "Clinical Facility"}</span>
+            </div>
+            <p className="text-slate-300">
+              Region: <strong className="text-white">{user?.region}</strong>
+            </p>
+            <p className="text-slate-300">
+              Capacity: <strong className="text-white">{user?.bedCapacity} operational beds</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Reactive Emergency Stockout Alert Banner */}
+      {critical.length > 0 && (
+        <div className="relative overflow-hidden rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 via-red-50 to-orange-50 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white shadow-md shadow-rose-600/30">
+                <AlertTriangle className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-rose-600" />
+                </span>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {scopedTransfers.map((t) => {
-                  const isIncoming = t.toId === activeHospitalId;
-                  const isOutgoing = t.fromId === activeHospitalId;
-                  return (
-                    <div
-                      key={t.id}
-                      onClick={() => setSelectedTransfer(selectedTransfer === t.id ? null : t.id)}
-                      className={`cursor-pointer rounded-xl border p-3.5 transition-all ${
-                        selectedTransfer === t.id
-                          ? "border-indigo-500 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-sm"
-                          : "border-slate-200/80 bg-white hover:border-indigo-300"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                        <span className="flex items-center gap-1 text-indigo-600 font-bold">
-                          {t.medicine}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {!isNetworkView && isIncoming && (
-                            <span className="rounded bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[10px] font-bold">
-                              INCOMING ↓
-                            </span>
-                          )}
-                          {!isNetworkView && isOutgoing && (
-                            <span className="rounded bg-blue-100 text-blue-800 px-1.5 py-0.5 text-[10px] font-bold">
-                              OUTGOING ↑
-                            </span>
-                          )}
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px]">
-                            {t.qty.toLocaleString()} units
-                          </span>
-                        </div>
-                      </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-rose-900">
+                    Urgent Supply Depletion at {currentHospitalName}
+                  </h3>
+                  <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                    {critical.length} Critical Stockouts
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-rose-700">
+                  {critical.map((c) => `${c.medicine} (${c.days_left?.toFixed(1)}d supply left)`).join(" • ")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <Link
+                to="/redistribution"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm shadow-rose-600/20 hover:bg-rose-700 transition-all active:scale-95"
+              >
+                <Truck className="h-3.5 w-3.5" />
+                <span>Request Transfers</span>
+              </Link>
+              <Link
+                to="/shortage-risk"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-800 hover:bg-rose-100/60 transition-colors"
+              >
+                <span>View Details</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
-                      <div className="mt-2 text-xs text-slate-600 space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400">From:</span>
-                          <span className={`font-medium truncate ${isOutgoing ? 'text-indigo-700 font-bold' : 'text-slate-800'}`}>
-                            {t.from}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400">To:</span>
-                          <span className={`font-medium truncate ${isIncoming ? 'text-indigo-700 font-bold' : 'text-slate-800'}`}>
-                            {t.to}
-                          </span>
-                        </div>
-                      </div>
+      {/* Main KPI Grid with Color Theming */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <Link
+              key={c.to}
+              to={c.to}
+              className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg hover:shadow-slate-200/70"
+            >
+              <div
+                className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${c.gradient} opacity-80 group-hover:opacity-100 transition-opacity`}
+              />
 
-                      {/* Why This Action Card */}
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg">
-                        <span className="font-semibold text-indigo-900">WHY THIS ACTION:</span> {t.why}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${c.iconBg} shadow-sm group-hover:scale-105 transition-transform`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${c.badgeColor}`}>
+                    {c.badgeText}
+                  </span>
+                </div>
+
+                <p className="text-3xl font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+                  {c.value}
+                </p>
+                <h3 className="mt-1 text-sm font-bold text-slate-800">
+                  {c.title}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {c.hint}
+                </p>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-semibold text-indigo-600 group-hover:text-indigo-700">
+                <span>View Organization Data</span>
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Quick Reactive Watchlist Panels */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Scoped Shortages Watchlist */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-rose-100 p-1.5 text-rose-700">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <h2 className="text-sm font-bold text-slate-900">
+                {currentHospitalName} Inventory Watchlist
+              </h2>
+            </div>
+            <Link
+              to="/inventory"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+            >
+              <span>View full stock</span>
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="mt-4 divide-y divide-slate-100">
+            {scopedInventory
+              .slice()
+              .sort((a, b) => (a.days_left ?? 999) - (b.days_left ?? 999))
+              .map((row) => {
+                const level = riskOf(row.days_left);
+                return (
+                  <div
+                    key={`${row.hospital_id}-${row.medicine_id}`}
+                    className="flex items-center justify-between py-2.5 hover:bg-slate-50/80 px-2 rounded-lg transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800">{row.medicine}</span>
+                        <RiskBadge level={level} size="sm" />
                       </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Supplier: {row.supplier} (Lead: {row.supplier_lead_time_days}d)
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            )}
 
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-900">
+                        {row.days_left != null ? `${row.days_left.toFixed(1)} days` : "n/a"}
+                      </span>
+                      <p className="text-[10px] text-slate-500">
+                        {row.current_quantity.toLocaleString()} in stock
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Peer Redistribution Recommendations for this Hospital */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-sky-100 p-1.5 text-sky-700">
+                <Truck className="h-4 w-4" />
+              </div>
+              <h2 className="text-sm font-bold text-slate-900">
+                Peer Redistribution Pipeline
+              </h2>
+            </div>
             <Link
               to="/redistribution"
-              className="mt-4 block w-full text-center rounded-xl bg-slate-900 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition-all"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
             >
-              Run Redistribution Optimizer
+              <span>Transfer manager</span>
+              <ArrowRight className="h-3 w-3" />
             </Link>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {scopedTransfers.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-500">
+                No active transfers currently scheduled for {currentHospitalName}.
+              </div>
+            ) : (
+              scopedTransfers.map((t) => {
+                const isIncoming = t.to === currentHospitalName;
+                return (
+                  <div
+                    key={t.id}
+                    className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 hover:border-sky-200 hover:bg-white transition-all space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
+                          isIncoming
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {isIncoming ? "Incoming Shipment" : "Outgoing Donor"}
+                      </span>
+                      <span className="text-xs font-bold text-slate-700">Score {t.score}/100</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <p className="font-bold text-slate-900">
+                          {t.quantity.toLocaleString()} units of {t.medicine}
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {isIncoming ? `From ${t.from}` : `To ${t.to}`}
+                        </p>
+                      </div>
+                      <Link
+                        to="/redistribution"
+                        className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                      >
+                        Manage
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-
