@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  Building2,
+  CircleCheck,
+  Clock,
+  HeartHandshake,
+  MapPin,
+  Navigation,
+  Package,
+  Sparkles,
+  Truck,
+  X,
+} from "lucide-react";
+import {
   DEMO_OFFERS,
   DEMO_REQUESTS,
   fillerRoute,
@@ -30,7 +42,7 @@ const STATUS_STYLES: Record<RequestStatus, string> = {
 
 const FALLBACK_MEDICINES = Array.from(new Set(DEMO_REQUESTS.map((r) => r.medicine))).sort();
 
-const inputCls = "w-full rounded border border-gray-300 px-2 py-1 text-sm";
+const inputCls = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
 
 /** Best offer first: ready now beats waiting; among ready donors the fastest
  * route wins (traffic-aware); then larger quantity. */
@@ -74,7 +86,8 @@ export default function Requests() {
   const [urgency, setUrgency] = useState<RequestUrgency>("Normal");
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Offer form state (inside the detail modal).
+  // Offer form state (inside the detail modal, behind the Grant Help button).
+  const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerQty, setOfferQty] = useState("");
   const [offerTransport, setOfferTransport] = useState(false);
   const [offerEta, setOfferEta] = useState("");
@@ -114,6 +127,7 @@ export default function Requests() {
 
   function openDetail(id: string) {
     setSelectedId(id);
+    setOfferFormOpen(false);
     setOfferQty("");
     setOfferTransport(false);
     setOfferEta("");
@@ -186,7 +200,10 @@ export default function Requests() {
     setOfferTransport(false);
     setOfferEta("");
     setOfferError(null);
+    setOfferFormOpen(false);
   }
+
+  const coveragePct = selected ? Math.min(100, Math.round((offeredQty / selected.quantity) * 100)) : 0;
 
   return (
     <div className="pb-20">
@@ -270,122 +287,207 @@ export default function Requests() {
       )}
 
       {selected && (
-        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-4" onClick={() => setSelectedId(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-3 backdrop-blur-sm sm:p-4 lg:p-6" onClick={() => setSelectedId(null)}>
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-gray-200 bg-white p-5 shadow-xl"
+            className="m-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-slate-50 shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="font-bold">{selected.hospital} needs {selected.medicine}</h3>
-                <p className="text-sm text-gray-600">
-                  {selected.quantity.toLocaleString()} units · {selected.urgency} urgency · {selected.status}
+            {/* Header */}
+            <div className="flex shrink-0 flex-wrap items-start gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-5 sm:py-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white">
+                <Building2 size={20} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {selected.hospital} <span className="font-medium text-slate-400">needs</span> {selected.medicine}
+                  </h3>
+                  <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${URGENCY_STYLES[selected.urgency]}`}>
+                    {selected.urgency}
+                  </span>
+                  <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[selected.status]}`}>
+                    {selected.status}
+                  </span>
+                </div>
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                  <span className="inline-flex items-center gap-1"><Package size={14} /> {selected.quantity.toLocaleString()} units needed</span>
+                  <span className="inline-flex items-center gap-1"><Clock size={14} /> Requested {selected.date}</span>
                 </p>
-                <p className="mt-1 text-sm text-gray-600">{selected.note}</p>
+                {selected.note && <p className="mt-1 text-sm text-slate-600">{selected.note}</p>}
+                {/* Coverage progress */}
+                <div className="mt-2 flex max-w-md items-center gap-2">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className={`h-full rounded-full transition-all ${offeredQty >= selected.quantity ? "bg-green-600" : "bg-slate-900"}`}
+                      style={{ width: `${coveragePct}%` }}
+                    />
+                  </div>
+                  <span className="whitespace-nowrap text-xs font-semibold text-slate-700">
+                    {offeredQty.toLocaleString()} / {selected.quantity.toLocaleString()} · {coveragePct}%
+                  </span>
+                  {offeredQty >= selected.quantity && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+                      <CircleCheck size={12} /> Fully covered
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedId(null)}
-                className="rounded border border-gray-300 px-2 py-0.5 text-sm hover:bg-gray-100"
+                aria-label="Close details"
+                className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
               >
-                Close
+                <X size={16} />
               </button>
             </div>
 
-            <div className="mt-2 rounded bg-gray-50 px-2 py-1 text-sm">
-              Offered so far: <strong>{offeredQty.toLocaleString()}</strong> / {selected.quantity.toLocaleString()} units
-              {offeredQty >= selected.quantity && (
-                <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
-                  Fully covered
-                </span>
-              )}
-            </div>
-
-            <h4 className="mb-2 mt-4 font-semibold">Donor routes (traffic-aware)</h4>
-            <OfferMap requester={selected.hospital} offers={selectedOffers} />
-
-            <h4 className="mb-2 mt-4 font-semibold">Offers ({selectedOffers.length})</h4>
-            {selectedOffers.length === 0 ? (
-              <p className="rounded border border-gray-200 bg-white p-4 text-center text-sm text-gray-600">
-                No offers yet — be the first to help.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {selectedOffers.map((o, i) => (
-                  <li key={o.id} className="rounded border border-gray-200 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold">{o.donor}</p>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${
-                          o.canTransportImmediately
-                            ? "bg-green-100 text-green-800 border-green-300"
-                            : "bg-amber-100 text-amber-800 border-amber-300"
-                        }`}
-                      >
-                        {transportLabel(o)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm">{o.quantity.toLocaleString()} units · {o.note}</p>
-                    <p className="text-xs text-gray-400">Offered {o.date}</p>
-                    {i === 0 && o.canTransportImmediately && (
-                      <p className="mt-1 text-xs font-semibold text-green-700">Suggested: fastest route to the requester</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <h4 className="mb-2 mt-4 font-semibold">Grant help</h4>
-            {selected.hospital === requester ? (
-              <p className="rounded bg-gray-50 px-2 py-1 text-sm text-gray-600">
-                This is your facility's request — other hospitals will offer help here.
-              </p>
-            ) : (
-              <form onSubmit={submitOffer} className="space-y-2">
-                <div className="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm">
-                  <span className="text-gray-500">Donating facility: </span>
-                  <span className="font-semibold text-gray-800">{requester}</span>
+            {/* Body: map left, offers right */}
+            <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto p-3 sm:gap-4 sm:p-4 lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden lg:p-5">
+              {/* Left: geomap */}
+              <section className="flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:overflow-y-auto">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-900">
+                    <MapPin size={16} /> Donor routes
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-white">
+                    <Sparkles size={11} /> Traffic-aware
+                  </span>
+                  <span className="ml-auto text-xs text-slate-400">{selectedOffers.length} route{selectedOffers.length === 1 ? "" : "s"}</span>
                 </div>
-                <label className="block text-sm">
-                  Quantity you can provide (units)
-                  <input
-                    className={inputCls}
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 500"
-                    value={offerQty}
-                    onChange={(e) => setOfferQty(e.target.value)}
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={offerTransport}
-                    onChange={(e) => setOfferTransport(e.target.checked)}
-                  />
-                  We can transport it immediately
-                </label>
-                {!offerTransport && (
-                  <label className="block text-sm">
-                    Transport reachable in (hours)
-                    <input
-                      className={inputCls}
-                      type="number"
-                      min={1}
-                      placeholder="e.g. 6"
-                      value={offerEta}
-                      onChange={(e) => setOfferEta(e.target.value)}
-                    />
-                  </label>
+                <div className="min-w-0 shrink-0">
+                  <OfferMap requester={selected.hospital} offers={selectedOffers} />
+                </div>
+                <p className="mt-2 shrink-0 text-[11px] text-slate-400">Locations and traffic are filler data until the routing API lands.</p>
+              </section>
+
+              {/* Right: offers + grant help */}
+              <section className="flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:overflow-hidden">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <h4 className="text-sm font-bold text-slate-900">Offers ({selectedOffers.length})</h4>
+                  {selected.hospital !== requester && (
+                    <button
+                      type="button"
+                      onClick={() => { setOfferFormOpen((v) => !v); setOfferError(null); }}
+                      className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-700"
+                    >
+                      <HeartHandshake size={16} /> {offerFormOpen ? "Close form" : "Grant help"}
+                    </button>
+                  )}
+                </div>
+
+                {selected.hospital === requester ? (
+                  <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
+                    This is your facility's request — other hospitals will offer help here.
+                  </p>
+                ) : (
+                  offerFormOpen && (
+                    <form onSubmit={submitOffer} className="mb-3 space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="rounded-lg bg-white px-2.5 py-1.5 text-sm ring-1 ring-slate-200">
+                        <span className="text-slate-500">Donating as </span>
+                        <span className="font-semibold text-slate-900">{requester}</span>
+                      </div>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Quantity you can provide (units)
+                        <input
+                          className={`${inputCls} mt-1`}
+                          type="number"
+                          min={1}
+                          placeholder="e.g. 500"
+                          value={offerQty}
+                          onChange={(e) => setOfferQty(e.target.value)}
+                        />
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-2.5 py-2 text-sm ring-1 ring-slate-200">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-slate-900"
+                          checked={offerTransport}
+                          onChange={(e) => setOfferTransport(e.target.checked)}
+                        />
+                        <Truck size={15} className="text-slate-500" /> We can transport it immediately
+                      </label>
+                      {!offerTransport && (
+                        <label className="block text-sm font-medium text-slate-700">
+                          Transport reachable in (hours)
+                          <input
+                            className={`${inputCls} mt-1`}
+                            type="number"
+                            min={1}
+                            placeholder="e.g. 6"
+                            value={offerEta}
+                            onChange={(e) => setOfferEta(e.target.value)}
+                          />
+                        </label>
+                      )}
+                      {offerError && <p className="text-sm font-medium text-red-700">{offerError}</p>}
+                      <button type="submit" className="w-full rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">
+                        Send offer
+                      </button>
+                    </form>
+                  )
                 )}
-                {offerError && <p className="text-sm text-red-700">{offerError}</p>}
-                <div className="flex justify-end">
-                  <button type="submit" className="rounded bg-gray-900 px-3 py-1 text-sm font-semibold text-white hover:bg-gray-700">
-                    Offer help
-                  </button>
+
+                <div className="min-h-0 flex-1 overflow-y-auto pr-0.5 lg:pr-1">
+                  {selectedOffers.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                      <p className="text-sm font-semibold text-slate-800">No offers yet</p>
+                      <p className="mt-1 text-sm text-slate-500">Be the first to help this facility.</p>
+                      {selected.hospital !== requester && !offerFormOpen && (
+                        <button
+                          type="button"
+                          onClick={() => setOfferFormOpen(true)}
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                        >
+                          <HeartHandshake size={16} /> Grant help
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <ul className="space-y-2.5">
+                      {selectedOffers.map((o, i) => (
+                        <li key={o.id} className={`rounded-xl border p-3.5 transition hover:shadow-md ${i === 0 && o.canTransportImmediately ? "border-green-300 bg-green-50/50" : "border-slate-200 bg-white"}`}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                              {o.donor.charAt(0)}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-bold text-slate-900">{o.donor}</p>
+                              <p className="text-xs text-slate-400">Offered {o.date}</p>
+                            </div>
+                            <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-bold text-white">
+                              {o.quantity.toLocaleString()} units
+                            </span>
+                          </div>
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${
+                                o.canTransportImmediately
+                                  ? "border-green-300 bg-green-100 text-green-800"
+                                  : "border-amber-300 bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              <Truck size={12} /> {transportLabel(o)}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
+                            <span className="inline-flex items-center gap-1"><Navigation size={12} /> {o.distanceKm} km</span>
+                            <span className="inline-flex items-center gap-1"><Clock size={12} /> {o.travelMinutes} min</span>
+                            <span className="capitalize">{o.traffic} traffic</span>
+                            <span className="text-slate-400">· {o.note}</span>
+                          </p>
+                          {i === 0 && o.canTransportImmediately && (
+                            <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                              <Sparkles size={11} /> Suggested — fastest route
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </form>
-            )}
+              </section>
+            </div>
           </div>
         </div>
       )}
@@ -399,7 +501,7 @@ export default function Requests() {
           + Post Requirement
         </button>
       ) : (
-        <div className="fixed inset-0 z-10 flex items-end justify-end bg-black/30 p-4" onClick={() => setFormOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-end overflow-y-auto bg-slate-950/50 p-3 backdrop-blur-sm sm:p-4" onClick={() => setFormOpen(false)}>
           <form
             onSubmit={submit}
             onClick={(e) => e.stopPropagation()}

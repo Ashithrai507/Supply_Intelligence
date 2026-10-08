@@ -44,6 +44,22 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Keep Leaflet panes/controls contained inside modals so the geomap
+   never paints above the menubar or modal chrome. */
+.modal-map {
+  isolation: isolate;
+}
+
+.modal-map .leaflet-pane,
+.modal-map .leaflet-top,
+.modal-map .leaflet-bottom {
+  z-index: 1;
+}
+
+.modal-map .leaflet-control {
+  z-index: 2;
+}
+
 /* Subtle glowing pulse */
 @keyframes pulse-subtle {
   0%, 100% {
