@@ -75,6 +75,23 @@ export interface DemoOffer {
   note: string;
 }
 
+/** Filler hospital coordinates (Bengaluru area) for the request route map.
+ * Replace with real geocoded facility locations when available. */
+export const HOSPITAL_COORDS: Record<string, { lat: number; lng: number }> = {
+  "Hospital A": { lat: 12.9716, lng: 77.5946 },
+  "Hospital B": { lat: 12.979, lng: 77.6 },
+  "Hospital C": { lat: 12.96, lng: 77.585 },
+  "Hospital D": { lat: 12.975, lng: 77.588 },
+};
+
+export function hospitalCoords(name: string): { lat: number; lng: number } {
+  const known = HOSPITAL_COORDS[name];
+  if (known) return known;
+  let seed = 0;
+  for (const ch of name) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  return { lat: 12.9716 + ((seed % 60) - 30) / 1000, lng: 77.5946 + ((seed % 80) - 40) / 1000 };
+}
+
 /** Deterministic filler route for offers created in the UI (no backend yet). */
 export function fillerRoute(donor: string, requestId: string): {
   distanceKm: number;
