@@ -14,6 +14,8 @@ This guide provides instructions for developers and AI agents to spin up the loc
 
 ## 2. Supabase Architecture in this Repository
 
+
+
 The local Supabase configuration lives inside the `supabase/` folder:
 - `supabase/config.toml`: Project settings, listening ports, enabled services (DB, Auth, Studio, Storage, PostgREST).
 - `supabase/migrations/`: SQL migration files automatically applied in chronological order on startup.
