@@ -1,48 +1,46 @@
--- Seed: three demo roles (project.md §4) + one demo facility for the facility
--- manager. Passwords are demo-only (local Supabase Auth). Re-run safe.
+INSERT INTO public.hospitals(id,name,city,bed_capacity,avg_daily_patients) VALUES
+('00000000-0000-0000-0000-000000000001','MedPredict General Hospital','Mangaluru',500,850),
+('00000000-0000-0000-0000-000000000002','MedPredict City Hospital','Puttur',250,420)
+ON CONFLICT(id) DO NOTHING;
 
--- demo facility (stable id so profiles.facility_id survives data reloads;
--- synthetic-data loader (#9) must upsert, not blind-truncate, this row)
-insert into public.facilities (
-  id, name, type, address, latitude, longitude,
-  patient_capacity, avg_daily_patient_load, emergency_capacity
-)
-values (
-  '00000000-0000-0000-0000-00000000fac1',
-  'Seed Demo Hospital', 'District', '1 Demo Road',
-  12.9716, 77.5946, 400, 260, 40
-)
-on conflict (id) do nothing;
+INSERT INTO public.medicines(id,name,category,unit,criticality_level) VALUES
+('10000000-0000-0000-0000-000000000001','Paracetamol 500mg','Analgesic','TABLET','LOW'),
+('10000000-0000-0000-0000-000000000002','Amoxicillin 500mg','Antibiotic','CAPSULE','HIGH'),
+('10000000-0000-0000-0000-000000000003','Ceftriaxone 1g','Antibiotic','VIAL','CRITICAL'),
+('10000000-0000-0000-0000-000000000004','Insulin Regular','Antidiabetic','VIAL','CRITICAL'),
+('10000000-0000-0000-0000-000000000005','Normal Saline 500ml','IV Fluid','BAG','HIGH'),
+('10000000-0000-0000-0000-000000000006','Ibuprofen 400mg','Analgesic','TABLET','MEDIUM'),
+('10000000-0000-0000-0000-000000000007','Azithromycin 500mg','Antibiotic','TABLET','HIGH'),
+('10000000-0000-0000-0000-000000000008','Omeprazole 20mg','Gastrointestinal','CAPSULE','MEDIUM'),
+('10000000-0000-0000-0000-000000000009','Adrenaline 1mg/ml','Emergency','AMPOULE','CRITICAL'),
+('10000000-0000-0000-0000-000000000010','Atorvastatin 20mg','Cardiovascular','TABLET','MEDIUM')
+ON CONFLICT(id) DO NOTHING;
 
--- demo auth users; the trigger (20261008090200) creates profiles and stamps
--- app_metadata.role / app_metadata.facility_id from raw_user_meta_data.
-insert into auth.users (
-  id, instance_id, aud, role, email, encrypted_password,
-  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-  created_at, updated_at
-)
-select
-  x.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-  x.email, crypt('demo-password-123', gen_salt('bf')),
-  now(), '{}'::jsonb, x.meta, now(), now()
-from (values
-  ('00000000-0000-0000-0000-00000000adm1',
-   'admin@demo.local',
-   '{"role":"ADMIN"}'::jsonb),
-  ('00000000-0000-0000-0000-00000000mgr1',
-   'manager@demo.local',
-   '{"role":"FACILITY_MANAGER","facility_id":"00000000-0000-0000-0000-00000000fac1"}'::jsonb),
-  ('00000000-0000-0000-0000-00000000anl1',
-   'analyst@demo.local',
-   '{"role":"ANALYST"}'::jsonb)
-) as x(id, email, meta)
-on conflict (id) do nothing;
+INSERT INTO public.supply_sources(id,name,source_type,city) VALUES
+('20000000-0000-0000-0000-000000000001','Karnataka Pharma Manufacturing','MANUFACTURER','Bengaluru'),
+('20000000-0000-0000-0000-000000000002','Coastal Medical Distributors','DISTRIBUTOR','Mangaluru'),
+('20000000-0000-0000-0000-000000000003','South India Hospital Supplies','DISTRIBUTOR','Mysuru'),
+('20000000-0000-0000-0000-000000000004','CityCare Pharmacy Wholesale','PHARMACY','Mangaluru')
+ON CONFLICT(id) DO NOTHING;
 
--- ensure profiles exist even if users predate the trigger
-insert into public.profiles (id, role, facility_id)
-select u.id,
-       coalesce((u.raw_user_meta_data ->> 'role')::public.user_role, 'ANALYST'),
-       nullif(u.raw_user_meta_data ->> 'facility_id', '')::uuid
-from auth.users u
-where u.email in ('admin@demo.local','manager@demo.local','analyst@demo.local')
-on conflict (id) do nothing;
+INSERT INTO public.supplier_medicines(id,source_id,medicine_id,lead_time_days,unit_price,minimum_order_quantity) VALUES
+('30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',4,1.20,100),
+('30000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002',5,4.50,50),
+('30000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003',3,38.00,20),
+('30000000-0000-0000-0000-000000000004','20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004',4,92.00,10),
+('30000000-0000-0000-0000-000000000005','20000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000005',2,28.00,50),
+('30000000-0000-0000-0000-000000000006','20000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000009',1,15.00,10)
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO public.inventory_batches(hospital_id,medicine_id,batch_number,quantity,reserved_quantity,received_date,expiry_date) VALUES
+('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','PCM-A-001',900,120,CURRENT_DATE-20,CURRENT_DATE+240),
+('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003','CTX-A-001',55,10,CURRENT_DATE-30,CURRENT_DATE+75),
+('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000004','INS-A-001',24,6,CURRENT_DATE-15,CURRENT_DATE+45),
+('00000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003','CTX-B-001',18,5,CURRENT_DATE-22,CURRENT_DATE+30)
+ON CONFLICT(hospital_id,medicine_id,batch_number) DO NOTHING;
+
+INSERT INTO public.purchase_orders(id,hospital_id,source_id,medicine_id,order_date,expected_delivery_date,ordered_quantity,received_quantity,status) VALUES
+('40000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003',CURRENT_DATE-2,CURRENT_DATE+1,50,0,'PENDING'),
+('40000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004',CURRENT_DATE-5,CURRENT_DATE-1,20,10,'PARTIALLY_RECEIVED'),
+('40000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003',CURRENT_DATE,CURRENT_DATE+3,30,0,'PENDING')
+ON CONFLICT(id) DO NOTHING;
