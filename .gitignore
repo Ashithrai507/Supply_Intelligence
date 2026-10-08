@@ -2,3 +2,31 @@ Problem_Statement.pdf
 
 # Superpowers session spec/plan files (keep local, never commit)
 docs/superpowers/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# uv — lockfile IS committed (reproducible installs)
+
+# Secrets — never commit
+.env
+.env.local
+
+# Generated data & model artifacts
+data/generated/
+backend/ml/artifacts/*.joblib
+backend/ml/artifacts/*.txt
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
+
+# Node (Phase 2)
+node_modules/
+dist/

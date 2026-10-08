@@ -1,0 +1,5 @@
+[
+ {"id":"dem-001","facility_id":"fac-001","medicine_id":"med-001","date":"2026-10-06","quantity_consumed":520,"patient_load":265,"emergency_cases":31,"outbreak_signal":true},
+ {"id":"dem-002","facility_id":"fac-001","medicine_id":"med-003","date":"2026-10-06","quantity_consumed":600,"patient_load":265,"emergency_cases":12,"outbreak_signal":false},
+ {"id":"dem-003","facility_id":"fac-002","medicine_id":"med-002","date":"2026-10-06","quantity_consumed":840,"patient_load":655,"emergency_cases":44,"outbreak_signal":true}
+]

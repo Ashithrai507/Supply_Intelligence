@@ -1,0 +1,5 @@
+[
+ {"id":"inv-001","facility_id":"fac-001","medicine_id":"med-001","batch_number":"DEMO-B-1001","quantity":2340,"reserved_quantity":0,"received_date":"2026-09-01","expiry_date":"2026-12-01"},
+ {"id":"inv-002","facility_id":"fac-002","medicine_id":"med-002","batch_number":"DEMO-B-1002","quantity":10000,"reserved_quantity":0,"received_date":"2026-08-15","expiry_date":"2026-10-26"},
+ {"id":"inv-003","facility_id":"fac-003","medicine_id":"med-003","batch_number":"DEMO-B-1003","quantity":4200,"reserved_quantity":0,"received_date":"2026-09-20","expiry_date":"2027-03-20"}
+]

@@ -1,0 +1,5 @@
+[
+ {"id":"fac-001","name":"MOCK Hospital A (demo)","type":"District","address":"1 Demo Road","latitude":12.9716,"longitude":77.5946,"patient_capacity":400,"avg_daily_patient_load":260,"emergency_capacity":40,"created_at":"2026-01-05T08:00:00"},
+ {"id":"fac-002","name":"MOCK Hospital B (demo)","type":"Tertiary","address":"2 Demo Road","latitude":12.9780,"longitude":77.6010,"patient_capacity":900,"avg_daily_patient_load":640,"emergency_capacity":90,"created_at":"2026-01-05T08:00:00"},
+ {"id":"fac-003","name":"MOCK Hospital C (demo)","type":"Community","address":"3 Demo Road","latitude":12.9650,"longitude":77.5880,"patient_capacity":150,"avg_daily_patient_load":95,"emergency_capacity":15,"created_at":"2026-01-05T08:00:00"}
+]

@@ -1,0 +1,4 @@
+[
+ {"id":"tr-001","source_facility_id":"fac-002","source_facility_name":"MOCK Hospital B (demo)","destination_facility_id":"fac-001","destination_facility_name":"MOCK Hospital A (demo)","medicine_id":"med-001","medicine_name":"MOCK Insulin","quantity":1500,"distance_km":18.0,"eta_hours":2.1,"priority_score":91.0,"reason":"Destination runs out in 4.5 days; source holds 4200 surplus units","batch_id":"DEMO-B-1001","status":"proposed","created_at":"2026-10-08T07:30:00"},
+ {"id":"tr-002","source_facility_id":"fac-002","source_facility_name":"MOCK Hospital B (demo)","destination_facility_id":"fac-003","destination_facility_name":"MOCK Hospital C (demo)","medicine_id":"med-002","medicine_name":"MOCK Amoxicillin","quantity":2000,"distance_km":9.5,"eta_hours":1.2,"priority_score":84.0,"reason":"Source surplus expires in 18 days; destination stock-out in 4.9 days","batch_id":"DEMO-B-1002","status":"proposed","created_at":"2026-10-08T07:30:00"}
+]

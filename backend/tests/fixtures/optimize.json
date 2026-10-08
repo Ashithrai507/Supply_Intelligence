@@ -1,0 +1,8 @@
+{
+ "transfers":[
+  {"id":"tr-001","source_facility_id":"fac-002","source_facility_name":"MOCK Hospital B (demo)","destination_facility_id":"fac-001","destination_facility_name":"MOCK Hospital A (demo)","medicine_id":"med-001","medicine_name":"MOCK Insulin","quantity":1500,"distance_km":18.0,"eta_hours":2.1,"priority_score":91.0,"reason":"Destination runs out in 4.5 days; source holds 4200 surplus units; batch expires in 21 days"},
+  {"id":"tr-002","source_facility_id":"fac-002","source_facility_name":"MOCK Hospital B (demo)","destination_facility_id":"fac-003","destination_facility_name":"MOCK Hospital C (demo)","medicine_id":"med-002","medicine_name":"MOCK Amoxicillin","quantity":2000,"distance_km":9.5,"eta_hours":1.2,"priority_score":84.0,"reason":"Source surplus will expire unused; destination stock-out projected in 4.9 days"}
+ ],
+ "before_kpis":{"facilities":20,"medicines":40,"critical_shortages":7,"expiry_risks":13,"recommended_transfers":21,"expected_shortage_units":18400,"expected_wastage_units":9200,"stockout_facilities":8},
+ "after_kpis":{"facilities":20,"medicines":40,"critical_shortages":1,"expiry_risks":4,"recommended_transfers":12,"expected_shortage_units":4100,"expected_wastage_units":2700,"stockout_facilities":2}
+}

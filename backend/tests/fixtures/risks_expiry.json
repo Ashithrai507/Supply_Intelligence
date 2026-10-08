@@ -1,0 +1,4 @@
+[
+ {"facility_id":"fac-002","facility_name":"MOCK Hospital B (demo)","medicine_id":"med-002","medicine_name":"MOCK Amoxicillin","batch_number":"DEMO-B-1002","quantity":10000,"expiry_date":"2026-10-26","days_to_expiry":18,"expected_use_before_expiry":4500,"units_at_risk":5500,"risk_level":"critical"},
+ {"facility_id":"fac-001","facility_name":"MOCK Hospital A (demo)","medicine_id":"med-003","medicine_name":"MOCK Paracetamol","batch_number":"DEMO-B-1099","quantity":6000,"expiry_date":"2026-10-29","days_to_expiry":21,"expected_use_before_expiry":4100,"units_at_risk":1900,"risk_level":"warning"}
+]

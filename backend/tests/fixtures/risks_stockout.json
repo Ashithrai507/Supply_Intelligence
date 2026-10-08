@@ -1,0 +1,4 @@
+[
+ {"facility_id":"fac-001","facility_name":"MOCK Hospital A (demo)","medicine_id":"med-001","medicine_name":"MOCK Insulin","current_stock":2340,"predicted_daily_demand":520.0,"supplier_lead_time_days":7,"days_until_stockout":4.5,"stockout_probability":0.87,"risk_level":"critical","reasons":["Demand increased 34% vs 4-week average","Supplier lead time is 7 days (delay +3 days)","Outbreak signal active in region"]},
+ {"facility_id":"fac-003","facility_name":"MOCK Hospital C (demo)","medicine_id":"med-002","medicine_name":"MOCK Amoxicillin","current_stock":1180,"predicted_daily_demand":240.0,"supplier_lead_time_days":5,"days_until_stockout":4.9,"stockout_probability":0.64,"risk_level":"warning","reasons":["Emergency cases up 22% week-over-week","No alternative group stocked"]}
+]

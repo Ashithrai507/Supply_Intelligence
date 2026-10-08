@@ -1,0 +1,21 @@
+{
+ "transfer_id":"tr-001",
+ "reasons":[
+  "Hospital A runs out of Insulin in 4.5 days",
+  "Hospital B has 4,200 surplus units above projected need",
+  "Donor batch DEMO-B-1001 expires in 21 days",
+  "Hospital A is 18 km / 2.1 hours away — feasible within lead time",
+  "Hospital C has 12 days of stock for the same medicine",
+  "Hospital A has higher emergency demand (+22% cases)"
+ ],
+ "numbers":{
+  "destination_days_to_stockout":4.5,
+  "source_surplus_units":4200,
+  "transfer_quantity":1500,
+  "batch_days_to_expiry":21,
+  "distance_km":18.0,
+  "eta_hours":2.1,
+  "competitor_days_of_stock":12,
+  "destination_stockout_probability":0.87
+ }
+}

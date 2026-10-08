@@ -1,0 +1,42 @@
+[project]
+name = "supply-intelligence-backend"
+version = "0.1.0"
+description = "Medical Supply Early Warning & Redistribution Intelligence System — FastAPI backend"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "supabase>=2.6",
+    "lightgbm>=4.3",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "ortools>=9.10",
+    "joblib>=1.4",
+    "httpx>=0.27",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["ml/artifacts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+package = false

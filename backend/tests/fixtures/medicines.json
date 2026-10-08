@@ -1,0 +1,5 @@
+[
+ {"id":"med-001","name":"MOCK Insulin","category":"Diabetes","unit":"vial","criticality_level":5,"alternative_group":null,"created_at":"2026-01-05T08:00:00"},
+ {"id":"med-002","name":"MOCK Amoxicillin","category":"Antibiotic","unit":"capsule","criticality_level":4,"alternative_group":"penicillins","created_at":"2026-01-05T08:00:00"},
+ {"id":"med-003","name":"MOCK Paracetamol","category":"Analgesic","unit":"tablet","criticality_level":2,"alternative_group":"analgesics","created_at":"2026-01-05T08:00:00"}
+]
