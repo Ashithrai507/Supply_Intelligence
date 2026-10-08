@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   CalendarClock,
@@ -16,7 +16,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DEMO_INVENTORY } from "../api/mockData";
+import { getInventoryRows } from "../api/medpredict";
+import type { InventoryRow } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 function daysToExpiry(expiryDate: string): number {
@@ -25,14 +26,29 @@ function daysToExpiry(expiryDate: string): number {
 
 export default function Expiry() {
   const { user } = useAuth();
-  const currentHospitalName = user?.name ?? "City General Hospital";
+  const currentHospitalName = user?.name ?? "Hospital A";
+
+  const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | "7d" | "14d">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    getInventoryRows(user.id)
+      .then(setInventory)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
   const allExpiryRows = useMemo(
     () =>
-      DEMO_INVENTORY.filter((r) => r.hospital === currentHospitalName)
+      inventory
+        .filter((r) => r.hospital === currentHospitalName)
         .map((r) => {
           const dte = daysToExpiry(r.expiry_date);
           const expectedUse = Math.round(r.avg_daily_usage * Math.max(dte, 0));
@@ -41,7 +57,7 @@ export default function Expiry() {
         })
         .filter((r) => r.surplus > 0)
         .sort((a, b) => b.surplus - a.surplus),
-    [currentHospitalName],
+    [inventory, currentHospitalName],
   );
 
   const filteredRows = useMemo(() => {
@@ -71,6 +87,23 @@ export default function Expiry() {
       medicine: r.medicine,
     }));
   }, [filteredRows]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+        Loading expiry risk signals…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+        <h3 className="font-bold">Could not load live expiry data</h3>
+        <p className="mt-1 text-xs text-rose-700">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

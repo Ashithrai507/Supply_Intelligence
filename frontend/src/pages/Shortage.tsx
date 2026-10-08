@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   CheckCircle,
@@ -16,8 +16,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { riskOf } from "../api/client";
-import { DEMO_INVENTORY } from "../api/mockData";
+import { riskOf, type InventoryRow } from "../api/client";
+import { getInventoryRows } from "../api/medpredict";
 import { useAuth } from "../context/AuthContext";
 import RiskBadge from "../components/RiskBadge";
 
@@ -30,11 +30,25 @@ const BAR_COLORS: Record<string, string> = {
 
 export default function Shortage() {
   const { user } = useAuth();
-  const currentHospitalName = user?.name ?? "City General Hospital";
+  const currentHospitalName = user?.name ?? "Hospital A";
+
+  const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [feasibilityFilter, setFeasibilityFilter] = useState<"all" | "breached" | "safe">("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    getInventoryRows(user.id)
+      .then(setInventory)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -43,10 +57,10 @@ export default function Shortage() {
 
   const allAtRisk = useMemo(
     () =>
-      DEMO_INVENTORY.filter(
-        (r) => r.hospital === currentHospitalName && (r.days_left ?? 999) <= 14,
-      ).sort((a, b) => (a.days_left ?? 999) - (b.days_left ?? 999)),
-    [currentHospitalName],
+      inventory
+        .filter((r) => r.hospital === currentHospitalName && (r.days_left ?? 999) <= 14)
+        .sort((a, b) => (a.days_left ?? 999) - (b.days_left ?? 999)),
+    [inventory, currentHospitalName],
   );
 
   const filteredItems = useMemo(() => {
@@ -80,6 +94,23 @@ export default function Shortage() {
 
   const breachedCount = allAtRisk.filter((r) => (r.days_left ?? 0) <= r.supplier_lead_time_days).length;
   const safeCount = allAtRisk.filter((r) => (r.days_left ?? 0) > r.supplier_lead_time_days).length;
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+        Loading shortage signals…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+        <h3 className="font-bold">Could not load live shortage data</h3>
+        <p className="mt-1 text-xs text-rose-700">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

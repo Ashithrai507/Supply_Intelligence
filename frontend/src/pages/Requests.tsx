@@ -1,18 +1,21 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   DEMO_REQUESTS,
   type DemoRequest,
   type RequestStatus,
   type RequestUrgency,
 } from "../api/mockData";
+import { getMedicines } from "../api/forecast";
+import { useAuth } from "../context/AuthContext";
+import DemoBadge from "../components/DemoBadge";
 
-const URGENCIES: RequestUrgency[] = ["Critical", "High", "Normal"];
+const URGENCIES: RequestUrgency[] = ["Low", "Normal", "High"];
 const STATUSES: Array<"All" | RequestStatus> = ["All", "Pending", "Approved", "Fulfilled"];
 
 const URGENCY_STYLES: Record<RequestUrgency, string> = {
-  Critical: "bg-red-100 text-red-800 border-red-300",
-  High: "bg-orange-100 text-orange-800 border-orange-300",
+  Low: "bg-gray-100 text-gray-700 border-gray-300",
   Normal: "bg-green-100 text-green-800 border-green-300",
+  High: "bg-orange-100 text-orange-800 border-orange-300",
 };
 
 const STATUS_STYLES: Record<RequestStatus, string> = {
@@ -21,23 +24,40 @@ const STATUS_STYLES: Record<RequestStatus, string> = {
   Fulfilled: "bg-green-100 text-green-800 border-green-300",
 };
 
-const HOSPITALS = Array.from(new Set(DEMO_REQUESTS.map((r) => r.hospital))).sort();
-const MEDICINES = Array.from(new Set(DEMO_REQUESTS.map((r) => r.medicine))).sort();
+const FALLBACK_MEDICINES = Array.from(new Set(DEMO_REQUESTS.map((r) => r.medicine))).sort();
 
 const inputCls = "w-full rounded border border-gray-300 px-2 py-1 text-sm";
 
-/** Requests page: visible list of facility requests + bottom-right New Request form. */
+/** Requests page: global network board of non-urgent facility requirements. */
 export default function Requests() {
+  const { user } = useAuth();
+  const requester = user?.name ?? "Hospital A";
   const [requests, setRequests] = useState<DemoRequest[]>(DEMO_REQUESTS);
   const [urgencyFilter, setUrgencyFilter] = useState<"All" | RequestUrgency>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | RequestStatus>("All");
   const [formOpen, setFormOpen] = useState(false);
 
-  const [hospital, setHospital] = useState(HOSPITALS[0]);
-  const [medicine, setMedicine] = useState(MEDICINES[0]);
+  // Medicine options come from the live dataset; fall back to the demo list if offline.
+  const [medicines, setMedicines] = useState<string[]>(FALLBACK_MEDICINES);
+
+  const [medicine, setMedicine] = useState(FALLBACK_MEDICINES[0]);
   const [quantity, setQuantity] = useState("");
   const [urgency, setUrgency] = useState<RequestUrgency>("Normal");
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getMedicines()
+      .then((medicineOptions) => {
+        if (medicineOptions.length) {
+          const names = medicineOptions.map((m) => m.name);
+          setMedicines(names);
+          setMedicine((current) => (names.includes(current) ? current : names[0]));
+        }
+      })
+      .catch(() => {
+        // Offline — keep the demo-derived selector options.
+      });
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -54,8 +74,8 @@ export default function Requests() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const qty = Number(quantity);
-    if (!hospital || !medicine) {
-      setFormError("Choose an organization and a medicine.");
+    if (!medicine) {
+      setFormError("Choose a medicine.");
       return;
     }
     if (!Number.isFinite(qty) || qty <= 0) {
@@ -66,13 +86,13 @@ export default function Requests() {
     setRequests((prev) => [
       {
         id: `req-${Date.now()}`,
-        hospital,
+        hospital: requester,
         medicine,
         quantity: Math.floor(qty),
         urgency,
         status: "Pending",
         date: today,
-        note: "Submitted from the dashboard",
+        note: "Posted to the network board",
       },
       ...prev,
     ]);
@@ -84,12 +104,18 @@ export default function Requests() {
 
   return (
     <div className="pb-20">
-      <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-xl font-semibold">Supply Requests</h2>
+      <div className="mb-1 flex items-baseline justify-between">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-xl font-semibold">Network Requirements</h2>
+          <DemoBadge />
+        </div>
         <p className="text-sm text-gray-600">
           {pendingCount} pending · {filtered.length} shown
         </p>
       </div>
+      <p className="mb-4 text-sm text-gray-600">
+        Non-urgent needs posted across the network. Post your facility's requirements below.
+      </p>
 
       <div className="mb-4 flex flex-wrap gap-3 rounded border border-gray-200 bg-gray-50 p-3">
         <label className="flex items-center gap-1 text-sm">
@@ -120,7 +146,7 @@ export default function Requests() {
 
       {filtered.length === 0 ? (
         <p className="rounded border border-gray-200 bg-white p-6 text-center text-gray-600">
-          No requests match these filters.
+          No requirements match these filters.
         </p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -153,7 +179,7 @@ export default function Requests() {
           onClick={() => setFormOpen(true)}
           className="fixed bottom-6 right-6 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-gray-700"
         >
-          + New Request
+          + Post Requirement
         </button>
       ) : (
         <div className="fixed inset-0 z-10 flex items-end justify-end bg-black/30 p-4" onClick={() => setFormOpen(false)}>
@@ -162,20 +188,16 @@ export default function Requests() {
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-4 shadow-xl"
           >
-            <h3 className="mb-3 font-semibold">New supply request</h3>
+            <h3 className="mb-3 font-semibold">Post a requirement</h3>
             <div className="space-y-2">
-              <label className="block text-sm">
-                Organization
-                <select className={inputCls} value={hospital} onChange={(e) => setHospital(e.target.value)}>
-                  {HOSPITALS.map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm">
+                <span className="text-gray-500">Requesting facility: </span>
+                <span className="font-semibold text-gray-800">{requester}</span>
+              </div>
               <label className="block text-sm">
                 Medicine needed
                 <select className={inputCls} value={medicine} onChange={(e) => setMedicine(e.target.value)}>
-                  {MEDICINES.map((m) => (
+                  {medicines.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
@@ -209,7 +231,7 @@ export default function Requests() {
                   Cancel
                 </button>
                 <button type="submit" className="rounded bg-gray-900 px-3 py-1 text-sm font-semibold text-white hover:bg-gray-700">
-                  Submit request
+                  Post requirement
                 </button>
               </div>
             </div>

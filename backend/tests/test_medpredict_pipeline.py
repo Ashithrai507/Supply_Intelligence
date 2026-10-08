@@ -75,6 +75,8 @@ def test_4_stock_simulation_and_days_of_supply(db: Session):
     assert inv.expected_daily_demand > 0
     assert inv.days_of_supply >= 0
     assert inv.risk_level in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
+    assert inv.hospital_name == "Hospital A"
+    assert inv.supplier_name is not None
 
 
 def test_5_expiry_risk_calculation(db: Session):

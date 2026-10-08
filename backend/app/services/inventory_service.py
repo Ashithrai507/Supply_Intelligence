@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.entities import (
     DemandHistory,
+    Hospital,
     InventoryBatch,
     Medicine,
     PurchaseOrder,
@@ -127,6 +128,10 @@ def calculate_medicine_inventory(
         .first()
     )
     lead_time_days = supp_link.lead_time_days if supp_link else 7
+    supplier_name = supp_link.source.name if supp_link and supp_link.source else None
+
+    hospital = db.query(Hospital).filter(Hospital.id == hospital_id).first()
+    hospital_name = hospital.name if hospital else None
 
     # 6. Deterministic stock-out simulation
     # Projected stock daily walk
@@ -171,6 +176,7 @@ def calculate_medicine_inventory(
 
     return MedicineInventoryDetail(
         hospital_id=hospital_id,
+        hospital_name=hospital_name,
         medicine_id=medicine_id,
         medicine_name=medicine.name,
         category=medicine.category,
@@ -187,6 +193,7 @@ def calculate_medicine_inventory(
         batches=batch_schemas,
         incoming_purchase_orders_quantity=incoming_po_qty,
         supplier_lead_time_days=lead_time_days,
+        supplier_name=supplier_name,
     )
 
 

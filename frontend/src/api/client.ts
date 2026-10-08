@@ -1,30 +1,10 @@
-/** Typed API client for the Phase 1 relaunch backend (plain REST, no auth).
- * Base URL: VITE_API_BASE_URL (default http://localhost:8000).
- * Contract: Phase 1 T4 (#31) — GET /hospitals, /medicines, /inventory, /demand-history.
+/** Shared frontend view-model types for inventory/risk rendering.
+ *
+ * Live data is fetched through `api/medpredict.ts` (dataset-backed). This module
+ * only holds the shared row shape and the risk-band helper used by every page.
  */
 
-import { DEMO_FORECASTS, DEMO_INVENTORY, demoSeries } from "./mockData";
-
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
-
-export const demoState = { active: false };
-
-async function get<T>(path: string): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE_URL}${path}`);
-  } catch {
-    // Backend unreachable (e.g. #31 not landed yet) → presentation filler data.
-    demoState.active = true;
-    return mockFor(path) as T;
-  }
-  if (!res.ok) {
-    throw new Error(`GET ${path} failed: ${res.status} ${res.statusText}`);
-  }
-  return (await res.json()) as T;
-}
-
-/** One row of GET /inventory: per hospital×medicine view (T4 spec). */
+/** One row of the inventory view (API fields mapped by `api/medpredict.ts`). */
 export interface InventoryRow {
   hospital_id: string;
   hospital: string;
@@ -39,70 +19,6 @@ export interface InventoryRow {
   criticality: string; // "critical" for critical supplies
   alternative_available: boolean;
 }
-
-/** One row of GET /forecast (T6 spec). */
-export interface ForecastRow {
-  hospital_id: string;
-  hospital_name: string;
-  medicine_id: string;
-  medicine_name: string;
-  baseline_daily_demand: number;
-  predicted_daily_demand: number;
-  predicted_weekly_demand: number;
-  trend_growth_pct: number;
-  outbreak_multiplier: number;
-  confidence: "high" | "medium" | "low";
-}
-
-export interface HistoryPoint {
-  date: string;
-  quantity_used: number;
-}
-
-export interface ForecastPoint {
-  date: string;
-  predicted_daily: number;
-}
-
-/** GET /forecast/series (T6 spec): last 30 history + next 14 forecast points. */
-export interface ForecastSeries {
-  history: HistoryPoint[];
-  forecast: ForecastPoint[];
-}
-
-/** Presentation fallback routing: API path → filler payload (same contract shapes). */
-function mockFor(path: string): unknown {
-  const [route, query] = path.split("?");
-  if (route === "/inventory") return DEMO_INVENTORY;
-  if (route === "/forecast") {
-    const params = new URLSearchParams(query ?? "");
-    const hid = params.get("hospital_id");
-    const mid = params.get("medicine_id");
-    return DEMO_FORECASTS.filter(
-      (r) => (!hid || r.hospital_id === hid) && (!mid || r.medicine_id === mid),
-    );
-  }
-  if (route === "/forecast/series") {
-    const params = new URLSearchParams(query ?? "");
-    return demoSeries(params.get("hospital_id") ?? "", params.get("medicine_id") ?? "");
-  }
-  throw new Error(`No demo data for GET ${path} and backend is unreachable`);
-}
-
-export const api = {
-  getInventory: () => get<InventoryRow[]>("/inventory"),
-  getForecast: (hospitalId?: string, medicineId?: string) => {
-    const params = new URLSearchParams();
-    if (hospitalId) params.set("hospital_id", hospitalId);
-    if (medicineId) params.set("medicine_id", medicineId);
-    const qs = params.toString();
-    return get<ForecastRow[]>(`/forecast${qs ? `?${qs}` : ""}`);
-  },
-  getForecastSeries: (hospitalId: string, medicineId: string) =>
-    get<ForecastSeries>(
-      `/forecast/series?hospital_id=${encodeURIComponent(hospitalId)}&medicine_id=${encodeURIComponent(medicineId)}`,
-    ),
-};
 
 export type RiskLevel = "Critical" | "High" | "Medium" | "Safe";
 
