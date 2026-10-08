@@ -1,6 +1,7 @@
 import { Fragment, useMemo } from "react";
 import { CircleMarker, MapContainer, Polyline, Popup, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { MapPin } from "lucide-react";
 import type { DemoOffer, TrafficLevel } from "../api/mockData";
 import { hospitalCoords } from "../api/mockData";
 
@@ -31,15 +32,26 @@ export default function OfferMap({
   }, [center, offers]);
 
   if (offers.length === 0) {
-    return <p className="text-sm text-gray-500">No donor routes to show yet.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-12 text-center">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white">
+          <MapPin size={18} />
+        </span>
+        <p className="text-sm font-semibold text-slate-800">No donor routes yet</p>
+        <p className="max-w-xs text-xs text-slate-500">
+          Once hospitals offer help, their traffic-aware routes to {requester} will appear here.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div className="modal-map flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+      <div className="h-[240px] w-full sm:h-[300px] lg:h-[360px] xl:h-[400px]">
       <MapContainer
         bounds={bounds}
-        boundsOptions={{ padding: [24, 24] }}
-        style={{ height: 240, width: "100%", borderRadius: 8, zIndex: 0 }}
+        boundsOptions={{ padding: [28, 28] }}
+        style={{ height: "100%", width: "100%", zIndex: 0 }}
         scrollWheelZoom={false}
       >
         <TileLayer
@@ -48,8 +60,8 @@ export default function OfferMap({
         />
         <CircleMarker
           center={[center.lat, center.lng]}
-          radius={9}
-          pathOptions={{ color: "#1f2937", fillColor: "#1f2937", fillOpacity: 1 }}
+          radius={10}
+          pathOptions={{ color: "#0f172a", weight: 3, fillColor: "#0f172a", fillOpacity: 1 }}
         >
           <Popup><strong>{requester}</strong> (needs supply)</Popup>
         </CircleMarker>
@@ -63,7 +75,7 @@ export default function OfferMap({
                 pathOptions={{
                   color,
                   weight: 4,
-                  opacity: 0.85,
+                  opacity: 0.9,
                   dashArray: o.canTransportImmediately ? undefined : "7 6",
                 }}
               >
@@ -77,7 +89,7 @@ export default function OfferMap({
               <CircleMarker
                 center={[d.lat, d.lng]}
                 radius={7}
-                pathOptions={{ color, fillColor: color, fillOpacity: 1 }}
+                pathOptions={{ color, weight: 2, fillColor: color, fillOpacity: 1 }}
               >
                 <Popup><strong>{o.donor}</strong> (donor)</Popup>
               </CircleMarker>
@@ -85,11 +97,18 @@ export default function OfferMap({
           );
         })}
       </MapContainer>
-      <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-gray-600">
-        <span><span className="mr-1 inline-block h-2 w-4 rounded bg-green-600 align-middle" />Low traffic</span>
-        <span><span className="mr-1 inline-block h-2 w-4 rounded bg-amber-600 align-middle" />Moderate</span>
-        <span><span className="mr-1 inline-block h-2 w-4 rounded bg-red-600 align-middle" />Heavy</span>
-        <span className="ml-auto">Locations and traffic are filler data</span>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-slate-100 bg-white px-3 py-2 text-[11px] font-medium text-slate-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5">
+          <span className="h-2 w-2 rounded-full bg-green-600" /> Low
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5">
+          <span className="h-2 w-2 rounded-full bg-amber-600" /> Moderate
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5">
+          <span className="h-2 w-2 rounded-full bg-red-600" /> Heavy
+        </span>
+        <span className="ml-auto hidden text-slate-400 sm:inline">Solid = immediate · Dashed = pickup needed</span>
       </div>
     </div>
   );
