@@ -1,0 +1,13 @@
+source_id,source_name,source_type,city
+S01,Distributor 01,DISTRIBUTOR,Bengaluru
+S02,Manufacturer 02,MANUFACTURER,Mangaluru
+S03,Pharmacy 03,PHARMACY,Mysuru
+S04,Distributor 04,DISTRIBUTOR,Hubballi
+S05,Manufacturer 05,MANUFACTURER,Bengaluru
+S06,Pharmacy 06,PHARMACY,Mangaluru
+S07,Distributor 07,DISTRIBUTOR,Mysuru
+S08,Manufacturer 08,MANUFACTURER,Hubballi
+S09,Pharmacy 09,PHARMACY,Bengaluru
+S10,Distributor 10,DISTRIBUTOR,Mangaluru
+S11,Manufacturer 11,MANUFACTURER,Mysuru
+S12,Pharmacy 12,PHARMACY,Hubballi
