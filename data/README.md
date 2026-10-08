@@ -54,3 +54,19 @@ qty = base_rate[m] × capacity_factor[f] × seasonality(t) × weekly(t)
 
 All ids are deterministic UUIDv5(`seed | table | key`); `created_at` is a fixed
 timestamp so reruns are byte-comparable at the frame level.
+
+## Loading into Supabase (issue #9)
+
+```bash
+uv run python scripts/load_supabase.py --reset   # idempotent wipe + reload
+uv run python scripts/generate_data.py --load    # regenerate, then load
+```
+
+- `DATABASE_URL` must point at the Supabase pooler (see `.env.example`).
+- Bulk `COPY ... FROM STDIN (FORMAT csv)` in FK order
+  (facilities → medicines → children); `--reset` deletes children-first and
+  preserves the seed demo facility (`supabase/seed.sql`) that anchors the
+  demo manager login.
+- Every load ends with row-count + checksum assertions plus a one-facility
+  spot check (full demand history + batch expiries vs parquet) — mismatches
+  fail loudly and roll back.
