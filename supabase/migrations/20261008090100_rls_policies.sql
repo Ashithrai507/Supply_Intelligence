@@ -43,7 +43,8 @@ begin
         'create policy manager_read_%I on public.%I for select to authenticated
            using (public.jwt_role() = ''FACILITY_MANAGER''
                   and id = public.jwt_facility_id())', t, t);
-    elsif t in ('routes') then
+    elsif t in ('routes', 'recommendations') then
+      -- scoped to either endpoint of the transfer (no bare facility_id column)
       execute format(
         'create policy manager_read_%I on public.%I for select to authenticated
            using (public.jwt_role() = ''FACILITY_MANAGER''
