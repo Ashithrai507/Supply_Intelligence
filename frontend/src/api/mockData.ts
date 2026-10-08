@@ -129,13 +129,6 @@ export const DEMO_FORECASTS: ForecastRow[] = [
     outbreak_multiplier: 1.0, confidence: "high",
   },
   {
-    hospital_id: "h3", hospital_name: "St. Mary's Tertiary Care",
-    medicine_id: "m1", medicine_name: "Paracetamol",
-    baseline_daily_demand: 640.0, predicted_daily_demand: 1152.0,
-    predicted_weekly_demand: 8064.0, trend_growth_pct: 38.0,
-    outbreak_multiplier: 1.3, confidence: "low",
-  },
-  {
     hospital_id: "h1", hospital_name: "City General Hospital",
     medicine_id: "m2", medicine_name: "Amoxicillin",
     baseline_daily_demand: 400.0, predicted_daily_demand: 420.0,
@@ -144,10 +137,45 @@ export const DEMO_FORECASTS: ForecastRow[] = [
   },
   {
     hospital_id: "h2", hospital_name: "Riverside District Hospital",
+    medicine_id: "m1", medicine_name: "Paracetamol",
+    baseline_daily_demand: 450.0, predicted_daily_demand: 480.0,
+    predicted_weekly_demand: 3360.0, trend_growth_pct: 6.7,
+    outbreak_multiplier: 1.0, confidence: "high",
+  },
+  {
+    hospital_id: "h2", hospital_name: "Riverside District Hospital",
     medicine_id: "m3", medicine_name: "Insulin Glargine",
     baseline_daily_demand: 58.0, predicted_daily_demand: 61.0,
     predicted_weekly_demand: 427.0, trend_growth_pct: 5.2,
     outbreak_multiplier: 1.0, confidence: "high",
+  },
+  {
+    hospital_id: "h3", hospital_name: "St. Mary's Tertiary Care",
+    medicine_id: "m1", medicine_name: "Paracetamol",
+    baseline_daily_demand: 640.0, predicted_daily_demand: 1152.0,
+    predicted_weekly_demand: 8064.0, trend_growth_pct: 38.0,
+    outbreak_multiplier: 1.3, confidence: "low",
+  },
+  {
+    hospital_id: "h3", hospital_name: "St. Mary's Tertiary Care",
+    medicine_id: "m2", medicine_name: "Amoxicillin",
+    baseline_daily_demand: 430.0, predicted_daily_demand: 460.0,
+    predicted_weekly_demand: 3220.0, trend_growth_pct: 7.0,
+    outbreak_multiplier: 1.0, confidence: "medium",
+  },
+  {
+    hospital_id: "h4", hospital_name: "Lakeside Community Clinic",
+    medicine_id: "m1", medicine_name: "Paracetamol",
+    baseline_daily_demand: 110.0, predicted_daily_demand: 125.0,
+    predicted_weekly_demand: 875.0, trend_growth_pct: 13.6,
+    outbreak_multiplier: 1.0, confidence: "high",
+  },
+  {
+    hospital_id: "h4", hospital_name: "Lakeside Community Clinic",
+    medicine_id: "m2", medicine_name: "Amoxicillin",
+    baseline_daily_demand: 80.0, predicted_daily_demand: 85.0,
+    predicted_weekly_demand: 595.0, trend_growth_pct: 6.2,
+    outbreak_multiplier: 1.0, confidence: "medium",
   },
 ];
 
@@ -197,6 +225,17 @@ export const DEMO_TRANSFERS: DemoTransfer[] = [
       "Riverside at 12.7 days with +22% emergency demand",
       "City General holds 40 days of cover",
       "Low criticality — routine top-up",
+    ],
+  },
+  {
+    id: "t4",
+    from_id: "h1", from: "City General Hospital",
+    to_id: "h4", to: "Lakeside Community Clinic",
+    medicine: "Paracetamol", quantity: 500, score: 78,
+    reasons: [
+      "Lakeside runs out in 6.3 days with clinic patient influx",
+      "City General holds adequate safety stock",
+      "Fast 25-minute transit window",
     ],
   },
 ];
