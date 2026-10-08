@@ -13,9 +13,9 @@ import {
   Truck,
   X,
 } from "lucide-react";
-import { api, demoState, riskOf, type InventoryRow, type RiskLevel } from "../api/client";
+import { riskOf, type InventoryRow, type RiskLevel } from "../api/client";
+import { getInventoryRows } from "../api/medpredict";
 import { useAuth } from "../context/AuthContext";
-import DemoBadge from "../components/DemoBadge";
 import RiskBadge from "../components/RiskBadge";
 
 const RISK_OPTIONS: Array<"All" | RiskLevel> = ["All", "Critical", "High", "Medium", "Safe"];
@@ -40,12 +40,11 @@ function formatDaysLeft(daysLeft: number | null): string {
 
 export default function Inventory() {
   const { user } = useAuth();
-  const currentHospital = user?.name ?? "City General Hospital";
+  const currentHospital = user?.name ?? "Hospital A";
 
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
 
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,15 +66,14 @@ export default function Inventory() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    api
-      .getInventory()
-      .then((data) => {
-        setRows(data);
-        setIsDemo(demoState.active);
-      })
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    getInventoryRows(user.id)
+      .then((data) => setRows(data))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.id]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -227,7 +225,7 @@ export default function Inventory() {
           <AlertCircle className="h-6 w-6 text-rose-600" />
           <div>
             <h3 className="font-bold">Could not load live inventory</h3>
-            <p className="text-xs text-rose-700 mt-1">{error} — verify API connection or use presentation demo mode.</p>
+            <p className="text-xs text-rose-700 mt-1">{error} — verify the API at http://localhost:8000 is running.</p>
           </div>
         </div>
       </div>
@@ -251,7 +249,6 @@ export default function Inventory() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {currentHospital} — Formulary Stock Telemetry
             </h1>
-            {isDemo && <DemoBadge />}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Real-time formulary stock levels, consumption run-rates, and expiration countdowns for {currentHospital}.

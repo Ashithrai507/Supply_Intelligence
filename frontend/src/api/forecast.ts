@@ -188,7 +188,7 @@ export function getHospitals(signal?: AbortSignal): Promise<HospitalOption[]> {
 }
 
 export function getMedicines(signal?: AbortSignal): Promise<MedicineOption[]> {
-  return request<MedicineOption[]>("/api/medicines", { signal });
+  return request<MedicineOption[]>("/api/v1/medicines", { signal });
 }
 
 export function getDashboardAlerts(
