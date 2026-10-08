@@ -13,6 +13,7 @@ import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 import Priority from "./pages/Priority";
 import Redistribution from "./pages/Redistribution";
+import Requests from "./pages/Requests";
 import Shortage from "./pages/Shortage";
 import UserProfileMenu from "./components/UserProfileMenu";
 
@@ -29,6 +30,7 @@ const NAV_LINKS: NavLinkItem[] = [
   { to: "/expiry-risk", label: "Expiry" },
   { to: "/redistribution", label: "Transfers" },
   { to: "/priority", label: "Priority" },
+  { to: "/requests", label: "Requests" },
 ];
 
 function AuthenticatedApp() {
@@ -133,6 +135,7 @@ function AuthenticatedApp() {
           <Route path="/expiry-risk" element={<Expiry />} />
           <Route path="/redistribution" element={<Redistribution />} />
           <Route path="/priority" element={<Priority />} />
+          <Route path="/requests" element={<Requests />} />
         </Routes>
       </main>
 

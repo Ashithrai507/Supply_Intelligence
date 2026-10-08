@@ -8,6 +8,7 @@ import {
   Building2,
   CalendarClock,
   ChevronRight,
+  ClipboardList,
   ShieldAlert,
   Sparkles,
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   DEMO_FORECASTS,
   DEMO_INVENTORY,
   DEMO_PRIORITIES,
+  DEMO_REQUESTS,
   DEMO_TRANSFERS,
 } from "../api/mockData";
 import { useAuth } from "../context/AuthContext";
@@ -136,6 +138,18 @@ export default function Dashboard() {
       badgeText: scopedPriority?.level ?? "Active",
       badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
       icon: ShieldAlert,
+    },
+    {
+      to: "/requests",
+      title: "Supply Requests",
+      value: String(DEMO_REQUESTS.filter((r) => r.status === "Pending").length),
+      hint: `${DEMO_REQUESTS.length} facility requests logged`,
+      accent: "teal",
+      gradient: "from-teal-500 to-cyan-600",
+      iconBg: "bg-teal-600 text-white",
+      badgeText: "Facility Inbox",
+      badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
+      icon: ClipboardList,
     },
   ];
 

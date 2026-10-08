@@ -271,6 +271,54 @@ export const DEMO_PRIORITIES: DemoPriority[] = [
     breakdown: { patientLoad: 14, emergency: 16, stockout: 14, criticality: 15, alternatives: 9 },
   },
 ];
+/** Filler supply requests from hospitals/facilities (presentation only). */
+export type RequestUrgency = "Critical" | "High" | "Normal";
+export type RequestStatus = "Pending" | "Approved" | "Fulfilled";
+
+export interface DemoRequest {
+  id: string;
+  hospital: string;
+  medicine: string;
+  quantity: number;
+  urgency: RequestUrgency;
+  status: RequestStatus;
+  date: string;
+  note: string;
+}
+
+export const DEMO_REQUESTS: DemoRequest[] = [
+  {
+    id: "req-101", hospital: "Riverside District Hospital", medicine: "Insulin Glargine",
+    quantity: 500, urgency: "Critical", status: "Pending",
+    date: "2026-10-07", note: "Zero stock on hand, 3 diabetic inpatients",
+  },
+  {
+    id: "req-102", hospital: "St. Mary's Tertiary Care", medicine: "Paracetamol",
+    quantity: 3000, urgency: "Critical", status: "Approved",
+    date: "2026-10-06", note: "Outbreak-driven surge, 2.9 days of cover",
+  },
+  {
+    id: "req-103", hospital: "City General Hospital", medicine: "Amoxicillin",
+    quantity: 1200, urgency: "High", status: "Pending",
+    date: "2026-10-07", note: "Post-surgical ward demand rising",
+  },
+  {
+    id: "req-104", hospital: "Lakeside Community Clinic", medicine: "Amoxicillin",
+    quantity: 600, urgency: "Normal", status: "Pending",
+    date: "2026-10-05", note: "Routine restock for flu season",
+  },
+  {
+    id: "req-105", hospital: "City General Hospital", medicine: "Oral Rehydration Salts",
+    quantity: 2000, urgency: "Normal", status: "Fulfilled",
+    date: "2026-10-02", note: "Monsoon preparedness stock",
+  },
+  {
+    id: "req-106", hospital: "St. Mary's Tertiary Care", medicine: "Insulin Glargine",
+    quantity: 400, urgency: "High", status: "Approved",
+    date: "2026-10-04", note: "ICU buffer running low",
+  },
+];
+
 /** Deterministic 30-day history + 14-day forecast for any hospital×medicine pair. */
 export function demoSeries(hospitalId: string, medicineId: string): ForecastSeries {
   const row = DEMO_FORECASTS.find((r) => r.hospital_id === hospitalId && r.medicine_id === medicineId)
