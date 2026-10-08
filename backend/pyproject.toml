@@ -14,6 +14,7 @@ dependencies = [
     "lightgbm>=4.3",
     "pandas>=2.2",
     "numpy>=1.26",
+    "pyarrow>=18.0",
     "scikit-learn>=1.4",
     "ortools>=9.10",
     "joblib>=1.4",
