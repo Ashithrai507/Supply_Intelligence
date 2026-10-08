@@ -3,9 +3,11 @@ export default function DemoBadge() {
   return (
     <span
       title="Live backend unreachable — showing filler demo data"
-      className="inline-block rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800"
+      className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20"
     >
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
       Demo data
     </span>
   );
 }
+
