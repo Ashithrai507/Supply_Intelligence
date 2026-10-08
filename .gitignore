@@ -23,6 +23,9 @@ data/generated/
 backend/ml/artifacts/*.joblib
 backend/ml/artifacts/*.txt
 
+# Archives & Zip uploads
+*.zip
+
 # Supabase local state
 supabase/.temp/
 supabase/.branches/
@@ -30,3 +33,4 @@ supabase/.branches/
 # Node (Phase 2)
 node_modules/
 dist/
+
