@@ -5,11 +5,12 @@
  * so a backend rename touches one file. No `any` anywhere.
  *
  * Endpoints (backend/app/api):
- *   GET  /api/forecast/{hospital_id}/{medicine_id}?horizon_days&demand_surge_multiplier
- *   GET  /api/inventory/{hospital_id}/{medicine_id}
+ *   GET  /api/v1/forecast/{hospital_id}/{medicine_id}?horizon_days&demand_surge_multiplier
+ *   GET  /api/v1/inventory/{hospital_id}/{medicine_id}
  *   GET  /api/procurement/recommendations?hospital_id&surge_multiplier
  *   POST /api/simulation/run  {hospital_id, medicine_id, demand_increase_pct}
- *   GET  /api/hospitals | GET /api/medicines | GET /api/dashboard?hospital_id
+ *   GET  /api/hospitals | GET /api/v1/medicines | GET /api/dashboard?hospital_id
+ * (v1 prefix where the plain-/api alias was never added; all open, all real.)
  */
 
 const BASE_URL =
@@ -137,7 +138,7 @@ export function getForecast(
   signal?: AbortSignal,
 ): Promise<ForecastResponse> {
   return request<ForecastResponse>(
-    `/api/forecast/${encodeURIComponent(hospitalId)}/${encodeURIComponent(medicineId)}?horizon_days=${horizonDays}`,
+     `/api/v1/forecast/${encodeURIComponent(hospitalId)}/${encodeURIComponent(medicineId)}?horizon_days=${horizonDays}`,
     { signal },
   );
 }
@@ -148,7 +149,7 @@ export function getInventoryOutlook(
   signal?: AbortSignal,
 ): Promise<InventoryOutlook> {
   return request<InventoryOutlook>(
-    `/api/inventory/${encodeURIComponent(hospitalId)}/${encodeURIComponent(medicineId)}`,
+     `/api/v1/inventory/${encodeURIComponent(hospitalId)}/${encodeURIComponent(medicineId)}`,
     { signal },
   );
 }

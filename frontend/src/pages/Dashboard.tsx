@@ -23,6 +23,7 @@ import {
   DEMO_TRANSFERS,
 } from "../api/mockData";
 import { useAuth } from "../context/AuthContext";
+import ForecastAlerts from "../components/ForecastAlerts";
 import RiskBadge from "../components/RiskBadge";
 
 function daysToExpiry(expiryDate: string): number {
@@ -237,6 +238,7 @@ export default function Dashboard() {
       )}
 
       {/* Main KPI Grid with Color Theming */}
+      <ForecastAlerts />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => {
           const Icon = c.icon;
