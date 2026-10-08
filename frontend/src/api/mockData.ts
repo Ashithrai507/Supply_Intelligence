@@ -151,6 +151,87 @@ export const DEMO_FORECASTS: ForecastRow[] = [
   },
 ];
 
+/** Filler transfers + priority ranking (presentation only, same shapes as T9/T10). */
+export interface DemoTransfer {
+  id: string;
+  from_id: string;
+  from: string;
+  to_id: string;
+  to: string;
+  medicine: string;
+  quantity: number;
+  score: number;
+  reasons: string[];
+}
+
+export const DEMO_TRANSFERS: DemoTransfer[] = [
+  {
+    id: "t1",
+    from_id: "h2", from: "Riverside District Hospital",
+    to_id: "h1", to: "City General Hospital",
+    medicine: "Paracetamol", quantity: 2000, score: 92,
+    reasons: [
+      "City General runs out in 6.9 days",
+      "Riverside holds ~8,200 surplus units above expected use",
+      "Donor batch expires in 14 days",
+      "44 km, 1.5 h transit — arrives before the stock-out date",
+    ],
+  },
+  {
+    id: "t2",
+    from_id: "h2", from: "Riverside District Hospital",
+    to_id: "h3", to: "St. Mary's Tertiary Care",
+    medicine: "Amoxicillin", quantity: 1500, score: 84,
+    reasons: [
+      "St. Mary's runs out in 6.8 days with rising demand",
+      "Riverside holds 20.5 days of cover and stays above safety stock",
+      "Recipient has no stocked alternative",
+    ],
+  },
+  {
+    id: "t3",
+    from_id: "h1", from: "City General Hospital",
+    to_id: "h2", to: "Riverside District Hospital",
+    medicine: "Oral Rehydration Salts", quantity: 800, score: 64,
+    reasons: [
+      "Riverside at 12.7 days with +22% emergency demand",
+      "City General holds 40 days of cover",
+      "Low criticality — routine top-up",
+    ],
+  },
+];
+
+export interface DemoPriority {
+  hospital_id: string;
+  hospital: string;
+  score: number;
+  level: "Critical" | "High" | "Medium";
+  reason: string;
+  breakdown: { patientLoad: number; emergency: number; stockout: number; criticality: number; alternatives: number };
+}
+
+export const DEMO_PRIORITIES: DemoPriority[] = [
+  {
+    hospital_id: "h2", hospital: "Riverside District Hospital", score: 95, level: "Critical",
+    reason: "Insulin at zero stock, no alternative available",
+    breakdown: { patientLoad: 24, emergency: 28, stockout: 19, criticality: 15, alternatives: 9 },
+  },
+  {
+    hospital_id: "h3", hospital: "St. Mary's Tertiary Care", score: 92, level: "Critical",
+    reason: "Paracetamol demand up 38% on outbreak signal, 2.9 days left",
+    breakdown: { patientLoad: 27, emergency: 25, stockout: 18, criticality: 14, alternatives: 8 },
+  },
+  {
+    hospital_id: "h1", hospital: "City General Hospital", score: 87, level: "Critical",
+    reason: "Amoxicillin at 2.1 days, lead time 5 days cannot cover",
+    breakdown: { patientLoad: 22, emergency: 24, stockout: 17, criticality: 15, alternatives: 9 },
+  },
+  {
+    hospital_id: "h4", hospital: "Lakeside Community Clinic", score: 68, level: "Medium",
+    reason: "Amoxicillin at 4.7 days but low patient load",
+    breakdown: { patientLoad: 14, emergency: 16, stockout: 14, criticality: 15, alternatives: 9 },
+  },
+];
 /** Deterministic 30-day history + 14-day forecast for any hospital×medicine pair. */
 export function demoSeries(hospitalId: string, medicineId: string): ForecastSeries {
   const row = DEMO_FORECASTS.find((r) => r.hospital_id === hospitalId && r.medicine_id === medicineId)

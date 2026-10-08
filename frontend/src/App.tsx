@@ -1,8 +1,11 @@
 import { NavLink, Route, Routes } from "react-router-dom";
-import ComingSoon from "./pages/ComingSoon";
 import Dashboard from "./pages/Dashboard";
+import Expiry from "./pages/Expiry";
 import Forecast from "./pages/Forecast";
 import Inventory from "./pages/Inventory";
+import Priority from "./pages/Priority";
+import Redistribution from "./pages/Redistribution";
+import Shortage from "./pages/Shortage";
 
 const LINKS = [
   { to: "/", label: "Dashboard" },
@@ -43,10 +46,10 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/forecast" element={<Forecast />} />
-          <Route path="/shortage-risk" element={<ComingSoon title="Shortage Risk" />} />
-          <Route path="/expiry-risk" element={<ComingSoon title="Expiry Risk" />} />
-          <Route path="/redistribution" element={<ComingSoon title="Redistribution" />} />
-          <Route path="/priority" element={<ComingSoon title="Priority" />} />
+          <Route path="/shortage-risk" element={<Shortage />} />
+          <Route path="/expiry-risk" element={<Expiry />} />
+          <Route path="/redistribution" element={<Redistribution />} />
+          <Route path="/priority" element={<Priority />} />
         </Routes>
       </main>
     </div>
