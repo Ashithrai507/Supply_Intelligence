@@ -121,6 +121,15 @@ def test_post_endpoints_match_contract() -> None:
     assert forecast_run.status_code == 200
 
 
+def test_api_alias_medicines_for_frontend() -> None:
+    """Frontend calls GET /api/medicines (forecast.ts) — the non-v1 alias must exist."""
+    resp = client.get("/api/medicines")
+    assert resp.status_code == 200, f"/api/medicines -> {resp.status_code}"
+    body = resp.json()
+    assert isinstance(body, list) and body
+    assert {"id", "name", "category", "unit", "criticality_level"} <= body[0].keys()
+
+
 def test_openapi_renders_all_routes() -> None:
     spec = client.get("/openapi.json").json()
     paths = spec["paths"]

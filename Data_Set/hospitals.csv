@@ -1,9 +1,0 @@
-id,name,registration_number,address,city,state,pincode,contact_email,contact_phone,timezone,is_active
-920ef48e-37f7-4885-9e7f-ef5f2970a521,Aster Valley Hospital,HOSP-SYN-1000,100 Health Avenue,Bengaluru,Karnataka,560001,admin1@synthetic-hospital.test,9000000000,Asia/Kolkata,True
-e9ce1e40-149e-4ce9-9fa9-805e7fe159fa,CityCare Multispeciality Hospital,HOSP-SYN-1001,101 Health Avenue,Mangaluru,Karnataka,560002,admin2@synthetic-hospital.test,9000000001,Asia/Kolkata,True
-e3bbe120-0a9b-4cd8-b137-17f5c377e253,St Thomas Medical Centre,HOSP-SYN-1002,102 Health Avenue,Mysuru,Karnataka,560003,admin3@synthetic-hospital.test,9000000002,Asia/Kolkata,True
-08edb0d0-edbf-44ce-9d32-b74a11e02048,Sahyadri General Hospital,HOSP-SYN-1003,103 Health Avenue,Hubballi,Karnataka,560004,admin4@synthetic-hospital.test,9000000003,Asia/Kolkata,True
-a7373a90-b4e1-4e4c-8f0b-7ad06a9fa600,Lifeline Institute,HOSP-SYN-1004,104 Health Avenue,Kochi,Kerala,560005,admin5@synthetic-hospital.test,9000000004,Asia/Kolkata,True
-85ae4cf3-51bf-45d7-8011-bb994eb602a6,Metro Health Hospital,HOSP-SYN-1005,105 Health Avenue,Chennai,Tamil Nadu,560006,admin6@synthetic-hospital.test,9000000005,Asia/Kolkata,True
-9454a900-be26-4a3d-ad53-b449210cffb4,Nirmala Care Hospital,HOSP-SYN-1006,106 Health Avenue,Hyderabad,Telangana,560007,admin7@synthetic-hospital.test,9000000006,Asia/Kolkata,True
-0d84597b-6ea1-4332-bd4a-8451cde06855,Sunrise Specialty Hospital,HOSP-SYN-1007,107 Health Avenue,Pune,Maharashtra,560008,admin8@synthetic-hospital.test,9000000007,Asia/Kolkata,True

@@ -1,414 +1,454 @@
+/** Demand Forecast page — real LightGBM pipeline showcase (task §4–§15).
+ *
+ * Data flow (all real API, typed in ../api/forecast):
+ *   historical demand → LightGBM forecast → inventory projection → risk → action
+ * No fake values: without the backend this page shows loading / error / empty
+ * states (§20–§22). Set VITE_USE_MOCK=true only for offline UI development;
+ * mock output is then explicitly labeled and never presented as model output.
+ */
+
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
-  AlertCircle,
-  Building2,
-  Calendar,
-  Flame,
+  AlertTriangle,
+  FlaskConical,
   LineChart as LineChartIcon,
+  Loader2,
   Pill,
   RefreshCw,
-  Sparkles,
-  TrendingUp,
-  Zap,
+  ShoppingCart,
+  Truck,
 } from "lucide-react";
 import {
   CartesianGrid,
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import {
-  api,
-  demoState,
-  type ForecastRow,
-  type ForecastSeries,
-} from "../api/client";
-import { useAuth } from "../context/AuthContext";
-import DemoBadge from "../components/DemoBadge";
+  formatShortDate,
+  getForecast,
+  getHospitals,
+  getInventoryOutlook,
+  getMedicines,
+  getProcurementRecommendation,
+  runDemandScenario,
+  type ForecastResponse,
+  type HospitalOption,
+  type InventoryOutlook,
+  type MedicineOption,
+  type ProcurementRecommendation,
+  type ScenarioResponse,
+} from "../api/forecast";
 
-const CONFIDENCE_STYLES: Record<ForecastRow["confidence"], { bg: string; text: string; border: string }> = {
-  high: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-  medium: { bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200" },
-  low: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" },
+const USE_MOCK = (import.meta.env.VITE_USE_MOCK as string | undefined) === "true";
+
+const HORIZONS = [7, 14, 30];
+const SURGE_OPTIONS = [0, 20, 40, 60];
+
+const RISK_STYLES: Record<string, string> = {
+  CRITICAL: "bg-red-100 text-red-800 border-red-300",
+  HIGH: "bg-orange-100 text-orange-800 border-orange-300",
+  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  LOW: "bg-green-100 text-green-800 border-green-300",
 };
 
 interface ChartPoint {
   date: string;
+  label: string;
   actual?: number;
   predicted?: number;
 }
 
+function riskMessage(med: string, outlook: InventoryOutlook): string {
+  if (outlook.days_until_stockout == null) {
+    return `${med} has enough usable stock for the forecast horizon at current demand.`;
+  }
+  const date = outlook.projected_stockout_date ?? "an unknown date";
+  return (
+    `Based on forecast demand and current inventory, ${med} is projected ` +
+    `to fall below safety stock in ${outlook.days_until_stockout} days ` +
+    `(${date}). Risk level: ${outlook.risk_level}.`
+  );
+}
+
+const cardCls = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
+const labelCls = "text-xs font-medium uppercase tracking-wide text-slate-500";
+
 export default function Forecast() {
-  const { user } = useAuth();
-  const currentHospitalId = user?.id ?? "h1";
-  const currentHospitalName = user?.name ?? "City General Hospital";
-
-  const [rows, setRows] = useState<ForecastRow[]>([]);
-  const [series, setSeries] = useState<ForecastSeries | null>(null);
-  const [hospitalId, setHospitalId] = useState(currentHospitalId);
+  const [searchParams] = useSearchParams();
+  const [hospitals, setHospitals] = useState<HospitalOption[]>([]);
+  const [medicines, setMedicines] = useState<MedicineOption[]>([]);
+  const [hospitalId, setHospitalId] = useState("");
   const [medicineId, setMedicineId] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [horizon, setHorizon] = useState(7);
+
+  const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [outlook, setOutlook] = useState<InventoryOutlook | null>(null);
+  const [recommendation, setRecommendation] = useState<ProcurementRecommendation | null>(null);
+
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Interactive Outbreak Scenario Simulator (1.0 = Normal, up to 1.5 = +50% outbreak)
-  const [surgeMultiplier, setSurgeMultiplier] = useState<number>(1.0);
-  const [viewMode, setViewMode] = useState<"all" | "forecast" | "history">("all");
+  const [surgePct, setSurgePct] = useState(40);
+  const [scenario, setScenario] = useState<ScenarioResponse | null>(null);
+  const [scenarioLoading, setScenarioLoading] = useState(false);
+  const [scenarioError, setScenarioError] = useState<string | null>(null);
 
+  // Catalog for selectors.
   useEffect(() => {
-    api
-      .getForecast()
-      .then((data) => {
-        setRows(data);
-        setIsDemo(demoState.active);
-        if (data.length > 0) {
-          const matched = data.filter((r) => r.hospital_id === currentHospitalId);
-          const first = matched.length > 0 ? matched[0] : data[0];
-          setHospitalId(first.hospital_id);
-          setMedicineId(first.medicine_id);
+    const ctrl = new AbortController();
+    Promise.all([getHospitals(ctrl.signal), getMedicines(ctrl.signal)])
+      .then(([h, m]) => {
+        setHospitals(h);
+        setMedicines(m);
+        // Deep links (§17): /forecast?hospital=H01&medicine=M001 wins over defaults.
+        const paramH = searchParams.get("hospital");
+        const paramM = searchParams.get("medicine");
+        if (h.length > 0) {
+          setHospitalId((prev) => prev || (paramH && h.some((x) => x.id === paramH) ? paramH : h[0].id));
+        }
+        if (m.length > 0) {
+          setMedicineId((prev) => prev || (paramM && m.some((x) => x.id === paramM) ? paramM : m[0].id));
         }
       })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
-      .finally(() => setLoading(false));
-  }, [currentHospitalId]);
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : String(err));
+        setLoading(false);
+      });
+    return () => ctrl.abort();
+  }, []);
 
+  // Forecast + inventory + procurement for the selection.
   useEffect(() => {
     if (!hospitalId || !medicineId) return;
-    api
-      .getForecastSeries(hospitalId, medicineId)
-      .then(setSeries)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  }, [hospitalId, medicineId]);
+    const ctrl = new AbortController();
+    setLoading(true);
+    setError(null);
+    setScenario(null);
+    Promise.all([
+      getForecast(hospitalId, medicineId, horizon, ctrl.signal),
+      getInventoryOutlook(hospitalId, medicineId, ctrl.signal),
+      getProcurementRecommendation(hospitalId, medicineId, ctrl.signal),
+    ])
+      .then(([fc, inv, rec]) => {
+        setForecast(fc);
+        setOutlook(inv);
+        setRecommendation(rec);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
+    return () => ctrl.abort();
+  }, [hospitalId, medicineId, horizon, reloadKey]);
 
-
-  const medicines = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const r of rows.filter((r) => !hospitalId || r.hospital_id === hospitalId))
-      seen.set(r.medicine_id, r.medicine_name);
-    return [...seen.entries()];
-  }, [rows, hospitalId]);
-
-  const current: ForecastRow | undefined = rows.find(
-    (r) => r.hospital_id === hospitalId && r.medicine_id === medicineId,
-  );
-
-  // Dynamically reactive chart data scaled by scenario multiplier
   const chartData: ChartPoint[] = useMemo(() => {
-    if (!series) return [];
-    const history =
-      viewMode === "forecast"
-        ? []
-        : series.history.map((h) => ({ date: h.date, actual: h.quantity_used }));
+    if (!forecast) return [];
+    const hist = forecast.historical.map((h) => ({
+      date: h.date,
+      label: formatShortDate(h.date),
+      actual: h.predicted_demand,
+    }));
+    const fc = forecast.forecast.map((f) => ({
+      date: f.date,
+      label: formatShortDate(f.date),
+      predicted: f.predicted_demand,
+    }));
+    return [...hist, ...fc];
+  }, [forecast]);
 
-    const forecast =
-      viewMode === "history"
-        ? []
-        : series.forecast.map((f) => ({
-            date: f.date,
-            predicted: Math.round(f.predicted_daily * surgeMultiplier),
-          }));
+  const todayLabel = useMemo(() => {
+    if (!forecast || forecast.historical.length === 0) return "";
+    return formatShortDate(forecast.historical[forecast.historical.length - 1].date);
+  }, [forecast]);
 
-    return [...history, ...forecast];
-  }, [series, surgeMultiplier, viewMode]);
+  /** Projected inventory walk: usable stock minus cumulative forecast demand. */
+  const projection = useMemo(() => {
+    if (!forecast || !outlook) return [];
+    const safetyBuffer = outlook.expected_daily_demand * 2;
+    let stock = outlook.usable_inventory;
+    return forecast.forecast.map((f) => {
+      stock = Math.max(0, stock - f.predicted_demand);
+      return { date: f.date, label: formatShortDate(f.date), stock: Math.round(stock), safety: Math.round(safetyBuffer) };
+    });
+  }, [forecast, outlook]);
+
+  function runScenario() {
+    if (!hospitalId || !medicineId) return;
+    setScenarioLoading(true);
+    setScenarioError(null);
+    runDemandScenario(hospitalId, medicineId, surgePct)
+      .then(setScenario)
+      .catch((err: unknown) => setScenarioError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setScenarioLoading(false));
+  }
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-slate-500">
-          <RefreshCw className="h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-sm font-semibold">Running predictive neural forecasting models…</p>
-        </div>
+      <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-600">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <p>Generating demand forecast…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
-        <div className="flex items-center gap-3">
-          <AlertCircle className="h-6 w-6 text-rose-600" />
-          <div>
-            <h3 className="font-bold">Could not load forecast intelligence</h3>
-            <p className="text-xs text-rose-700 mt-1">{error}</p>
-          </div>
-        </div>
+      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-center">
+        <p className="font-semibold text-red-800">Unable to load forecast.</p>
+        <p className="mt-1 text-sm text-red-700">{error} — is the backend running?</p>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          className="mt-3 inline-flex items-center gap-1 rounded bg-red-700 px-3 py-1 text-sm font-semibold text-white hover:bg-red-800"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Retry
+        </button>
       </div>
     );
   }
 
-  if (rows.length === 0) {
+  if (!forecast || !outlook || forecast.forecast.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
-        No forecast data currently generated.
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-600">
+        Insufficient historical demand data to generate a reliable forecast.
       </div>
     );
   }
 
-  // Reactive metrics adjusted for surge
-  const effectiveDaily = current ? Math.round(current.predicted_daily_demand * surgeMultiplier * 10) / 10 : 0;
-  const effectiveWeekly = current ? Math.round(current.predicted_weekly_demand * surgeMultiplier) : 0;
-  const isSurgeActive = surgeMultiplier > 1.0;
+  const metrics = forecast.metrics ?? {};
+  const baseline = forecast.baseline_metrics ?? {};
+  const hasMetrics = metrics.mae != null && metrics.rmse != null && metrics.wape != null;
+  const riskCls = RISK_STYLES[outlook.risk_level] ?? RISK_STYLES.MEDIUM;
 
   return (
-    <div className="space-y-6">
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="space-y-4">
+      {/* Header + selectors */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              AI Demand Forecasting & Outbreak Projections
-            </h1>
-            {isDemo && <DemoBadge />}
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Predictive consumption trajectories, epidemiological surge multipliers, and confidence scoring.
-          </p>
+          <h2 className="text-xl font-bold">Demand Forecast</h2>
+          <p className="text-sm text-slate-500">AI-powered medicine demand prediction</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <select
+            aria-label="Hospital"
+            className="rounded border border-slate-300 px-2 py-1 text-sm"
+            value={hospitalId}
+            onChange={(e) => setHospitalId(e.target.value)}
+          >
+            {hospitals.map((h) => (
+              <option key={h.id} value={h.id}>{h.name}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Medicine"
+            className="rounded border border-slate-300 px-2 py-1 text-sm"
+            value={medicineId}
+            onChange={(e) => setMedicineId(e.target.value)}
+          >
+            {medicines.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Forecast horizon"
+            className="rounded border border-slate-300 px-2 py-1 text-sm"
+            value={horizon}
+            onChange={(e) => setHorizon(Number(e.target.value))}
+          >
+            {HORIZONS.map((h) => (
+              <option key={h} value={h}>{h} days</option>
+            ))}
+          </select>
         </div>
       </div>
-
-      {/* Selectors Bar */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Facility Scope</span>
-            </label>
-            <div className="w-full rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs font-bold text-indigo-900 truncate">
-              {currentHospitalName} ({user?.code})
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-              <Pill className="h-3.5 w-3.5 text-cyan-600" />
-              <span>Select Medicine</span>
-            </label>
-            <select
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors"
-              value={medicineId}
-              onChange={(e) => setMedicineId(e.target.value)}
-            >
-              {medicines.map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Interactive Surge Scenario Simulation Slider */}
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-2.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-indigo-950 mb-1.5">
-              <span className="flex items-center gap-1 text-[11px]">
-                <Flame className="h-3.5 w-3.5 text-rose-500" />
-                <span>Simulate Surge / Outbreak:</span>
-              </span>
-              <span className={`rounded-md px-1.5 py-0.2 text-[11px] font-bold ${isSurgeActive ? "bg-rose-600 text-white" : "bg-indigo-100 text-indigo-700"}`}>
-                +{Math.round((surgeMultiplier - 1) * 100)}%
-              </span>
-            </div>
-            <input
-              type="range"
-              min="1.0"
-              max="1.5"
-              step="0.05"
-              value={surgeMultiplier}
-              onChange={(e) => setSurgeMultiplier(Number(e.target.value))}
-              className="w-full accent-indigo-600 cursor-pointer h-1.5"
-            />
-            <div className="flex justify-between text-[10px] text-indigo-700/80 font-medium mt-1">
-              <span>Baseline (1.0x)</span>
-              <span>Mild (+25%)</span>
-              <span>Severe Outbreak (+50%)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Reactive Metric Cards */}
-      {current && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Daily Projected */}
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm hover:border-indigo-200 transition-all">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <span>Predicted Daily</span>
-              <div className="rounded-lg bg-indigo-100 p-1.5 text-indigo-600">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
-              {effectiveDaily.toFixed(1)} <span className="text-xs font-semibold text-slate-400">units/day</span>
-            </p>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Baseline: {current.baseline_daily_demand.toFixed(1)} units
-            </p>
-          </div>
-
-          {/* Weekly Projected */}
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm hover:border-indigo-200 transition-all">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <span>7-Day Requirement</span>
-              <div className="rounded-lg bg-cyan-100 p-1.5 text-cyan-600">
-                <Calendar className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
-              {effectiveWeekly.toLocaleString()} <span className="text-xs font-semibold text-slate-400">units/week</span>
-            </p>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Estimated 14-day: {(effectiveWeekly * 2).toLocaleString()} units
-            </p>
-          </div>
-
-          {/* Trend & Growth Velocity */}
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm hover:border-indigo-200 transition-all">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <span>Demand Growth Trend</span>
-              <div className="rounded-lg bg-purple-100 p-1.5 text-purple-600">
-                <Zap className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-extrabold text-slate-900">
-                {current.trend_growth_pct >= 0 ? "+" : ""}{current.trend_growth_pct.toFixed(1)}%
-              </span>
-              {current.trend_growth_pct > 20 && (
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
-                  Surge Alert
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Based on rolling historical gradient
-            </p>
-          </div>
-
-          {/* Confidence Score */}
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm hover:border-indigo-200 transition-all">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <span>Model Confidence</span>
-              <div className="rounded-lg bg-emerald-100 p-1.5 text-emerald-600">
-                <Sparkles className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span
-                className={`inline-block rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${CONFIDENCE_STYLES[current.confidence].bg} ${CONFIDENCE_STYLES[current.confidence].text} ${CONFIDENCE_STYLES[current.confidence].border}`}
-              >
-                {current.confidence} Confidence
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1.5">
-              Validated on 30-day clinical log volume
-            </p>
-          </div>
-        </div>
+      {USE_MOCK && (
+        <p className="rounded border border-amber-300 bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+          Demo data — not model output (VITE_USE_MOCK is on)
+        </p>
       )}
 
-      {/* Main Chart Card */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <LineChartIcon className="h-4 w-4 text-indigo-600" />
-              <span>Historical Consumption vs AI Projected Demand</span>
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              30-day actual clinical consumption history + 14-day predictive horizon
-            </p>
-          </div>
+      {/* Hero card */}
+      <div className={cardCls}>
+        <div className="flex items-center gap-2">
+          <Pill className="h-5 w-5 text-indigo-600" />
+          <h3 className="text-lg font-bold">{outlook.medicine_name}</h3>
+          <span className="text-xs text-slate-500">{outlook.category} · {outlook.criticality_level}</span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div><p className={labelCls}>Current stock</p><p className="text-lg font-bold">{outlook.usable_inventory.toLocaleString()} {outlook.unit}</p></div>
+          <div><p className={labelCls}>Avg daily demand</p><p className="text-lg font-bold">{outlook.expected_daily_demand.toFixed(1)}</p></div>
+          <div><p className={labelCls}>Days of supply</p><p className="text-lg font-bold">{outlook.days_of_supply.toFixed(1)} days</p></div>
+          <div><p className={labelCls}>Forecast horizon</p><p className="text-lg font-bold">{forecast.horizon_days} days</p></div>
+          <div><p className={labelCls}>Model</p><p className="text-lg font-bold">{forecast.model}</p></div>
+        </div>
+      </div>
 
-          {/* View Mode Filter Tabs */}
-          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs">
-            <button
-              onClick={() => setViewMode("all")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                viewMode === "all" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Full Series
-            </button>
-            <button
-              onClick={() => setViewMode("forecast")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                viewMode === "forecast" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Forecast Only
-            </button>
-            <button
-              onClick={() => setViewMode("history")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                viewMode === "history" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              History Only
-            </button>
-          </div>
+      {/* Main chart */}
+      <div className={cardCls}>
+        <h3 className="mb-1 flex items-center gap-2 text-sm font-bold">
+          <LineChartIcon className="h-4 w-4 text-indigo-600" /> Historical vs forecast demand
+        </h3>
+        <p className="mb-2 text-xs text-slate-500">Solid = actual consumption · Dashed = LightGBM prediction</p>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={28} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip />
+            <Legend />
+            <ReferenceLine x={todayLabel} stroke="#64748b" strokeDasharray="4 3" label={{ value: "TODAY", fontSize: 11, fill: "#64748b" }} />
+            <Line type="monotone" dataKey="actual" name="Actual used" stroke="#1f2937" strokeWidth={2} dot={false} connectNulls />
+            <Line type="monotone" dataKey="predicted" name="Forecast" stroke="#4f46e5" strokeWidth={2} strokeDasharray="6 4" dot={false} connectNulls />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Forecast table + inventory outlook */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={cardCls}>
+          <h3 className="mb-2 text-sm font-bold">Forecast table</h3>
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-xs text-slate-500"><th className="py-1">Date</th><th className="py-1 text-right">Predicted demand</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {forecast.forecast.map((f) => (
+                <tr key={f.date}><td className="py-1">{formatShortDate(f.date)}</td><td className="py-1 text-right font-medium">{f.predicted_demand.toFixed(1)}</td></tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {chartData.length === 0 ? (
-          <p className="py-12 text-center text-xs text-slate-500">No series data available for this selection.</p>
-        ) : (
-          <div className="pt-2">
-            <ResponsiveContainer width="100%" height={340}>
-              <LineChart data={chartData} margin={{ top: 10, right: 15, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#64748b" }} minTickGap={24} />
-                <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />
-                <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="rounded-xl border border-slate-200 bg-white/95 p-3 text-xs shadow-lg backdrop-blur-md">
-                          <p className="font-bold text-slate-800 mb-1">{label}</p>
-                          {payload.map((entry) => (
-                            <div key={entry.name} className="flex items-center gap-2 py-0.5">
-                              <span
-                                className="inline-block h-2.5 w-2.5 rounded-full"
-                                style={{ backgroundColor: entry.color }}
-                              />
-                              <span className="font-medium text-slate-600">{entry.name}:</span>
-                              <span className="font-bold text-slate-900">{Number(entry.value).toLocaleString()} units</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ paddingTop: 12, fontSize: 12, fontWeight: 500 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="actual"
-                  name="Historical Dispensed"
-                  stroke="#334155"
-                  strokeWidth={2.5}
-                  dot={{ r: 2, fill: "#334155" }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
-                <Line
-                  type="monotone"
-                  dataKey="predicted"
-                  name={isSurgeActive ? `AI Projection (+${Math.round((surgeMultiplier - 1) * 100)}% Surge)` : "AI Projected Demand"}
-                  stroke="#4f46e5"
-                  strokeWidth={2.5}
-                  strokeDasharray="6 4"
-                  dot={{ r: 2, fill: "#4f46e5" }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
+        <div className={`${cardCls} space-y-4`}>
+          <div>
+            <h3 className="mb-2 text-sm font-bold">Inventory outlook</h3>
+            <dl className="grid grid-cols-2 gap-2 text-sm">
+              <dt className="text-slate-500">Current stock</dt><dd className="text-right font-semibold">{outlook.usable_inventory.toLocaleString()} {outlook.unit}</dd>
+              <dt className="text-slate-500">Projected stock-out</dt><dd className="text-right font-semibold">{outlook.projected_stockout_date ?? "—"}</dd>
+              <dt className="text-slate-500">Days until stock-out</dt><dd className="text-right font-semibold">{outlook.days_until_stockout ?? "—"}</dd>
+              <dt className="text-slate-500">Lead time</dt><dd className="text-right font-semibold">{outlook.supplier_lead_time_days} days</dd>
+            </dl>
+          </div>
+          <div>
+            <h3 className="mb-2 text-sm font-bold">Projected inventory</h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={projection} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" tick={{ fontSize: 10 }} minTickGap={30} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="stock" name="Projected stock" stroke="#059669" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="safety" name="2-day safety buffer" stroke="#dc2626" strokeWidth={1} strokeDasharray="4 3" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <div className={`rounded-lg border px-3 py-2 ${riskCls}`}>
+            <p className="flex items-center gap-1 text-sm font-bold"><AlertTriangle className="h-4 w-4" /> {outlook.risk_level} STOCK-OUT RISK</p>
+            <p className="mt-1 text-xs">{riskMessage(outlook.medicine_name, outlook)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Procurement recommendation */}
+      <div className={cardCls}>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><ShoppingCart className="h-4 w-4 text-indigo-600" /> Recommended action</h3>
+        {recommendation ? (
+          <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div><p className={labelCls}>Medicine</p><p className="font-semibold">{recommendation.medicine_name}</p></div>
+            <div><p className={labelCls}>Recommended order</p><p className="font-semibold">{recommendation.recommended_quantity.toLocaleString()} units</p></div>
+            <div><p className={labelCls}>Supplier</p><p className="font-semibold">{recommendation.source_name}</p></div>
+            <div><p className={labelCls}>Expected delivery</p><p className="font-semibold">{recommendation.expected_delivery_date} ({recommendation.lead_time_days} days)</p></div>
+            <p className="text-xs text-slate-600 sm:col-span-2 lg:col-span-4">Reason: {recommendation.reason}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">No order needed — usable stock covers lead-time demand plus safety buffer.</p>
         )}
+      </div>
+
+      {/* Scenario runner */}
+      <div className={cardCls}>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><FlaskConical className="h-4 w-4 text-indigo-600" /> Demand surge scenario</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          {SURGE_OPTIONS.map((pct) => (
+            <button
+              key={pct}
+              type="button"
+              onClick={() => setSurgePct(pct)}
+              className={`rounded px-3 py-1 text-sm font-semibold ${surgePct === pct ? "bg-slate-900 text-white" : "border border-slate-300 hover:bg-slate-100"}`}
+            >
+              +{pct}%
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={runScenario}
+            disabled={scenarioLoading}
+            className="rounded bg-indigo-600 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {scenarioLoading ? "Running…" : "Run Scenario"}
+          </button>
+        </div>
+        {scenarioError && <p className="mt-2 text-sm text-red-700">{scenarioError}</p>}
+        {scenario && (
+          <div className="mt-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Stock-out", before: scenario.baseline_stockout_date ?? "—", after: scenario.simulated_stockout_date ?? "—" },
+                { label: "Risk", before: scenario.baseline_risk_level, after: scenario.simulated_risk_level },
+                {
+                  label: "Recommended order",
+                  before: `${scenario.baseline_recommended_order.toLocaleString()} units`,
+                  after: `${scenario.simulated_recommended_order.toLocaleString()} units`,
+                },
+              ].map((c) => (
+                <div key={c.label} className="rounded-lg border border-slate-200 p-3">
+                  <p className={labelCls}>{c.label}</p>
+                  <p className="mt-1 text-sm"><span className="text-slate-500">Before:</span> <strong>{c.before}</strong></p>
+                  <p className="text-sm"><span className="text-slate-500">After +{scenario.demand_increase_pct}%:</span> <strong className="text-indigo-700">{c.after}</strong></p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-slate-600"><Truck className="mr-1 inline h-3 w-3" />{scenario.summary}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Model info + performance */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={cardCls}>
+          <h3 className="mb-2 text-sm font-bold">AI forecasting model</h3>
+          <dl className="grid grid-cols-2 gap-2 text-sm">
+            <dt className="text-slate-500">Model</dt><dd className="text-right font-semibold">{forecast.model}</dd>
+            <dt className="text-slate-500">Version</dt><dd className="text-right font-semibold">{forecast.model_version}</dd>
+            <dt className="text-slate-500">Target</dt><dd className="text-right font-semibold">Daily medicine consumption</dd>
+            <dt className="text-slate-500">Forecast horizon</dt><dd className="text-right font-semibold">{forecast.horizon_days} days</dd>
+          </dl>
+        </div>
+        <div className={cardCls}>
+          <h3 className="mb-2 text-sm font-bold">Model performance</h3>
+          {hasMetrics ? (
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-xs text-slate-500"><th></th><th className="text-right">LightGBM</th><th className="text-right">Baseline (7-day MA)</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr><td>MAE</td><td className="text-right font-medium">{metrics.mae?.toFixed(2)}</td><td className="text-right">{baseline.mae?.toFixed(2) ?? "—"}</td></tr>
+                <tr><td>RMSE</td><td className="text-right font-medium">{metrics.rmse?.toFixed(2)}</td><td className="text-right">{baseline.rmse?.toFixed(2) ?? "—"}</td></tr>
+                <tr><td>WAPE</td><td className="text-right font-medium">{((metrics.wape ?? 0) * 100).toFixed(2)}%</td><td className="text-right">{baseline.wape != null ? `${(baseline.wape * 100).toFixed(2)}%` : "—"}</td></tr>
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-sm text-slate-500">Metrics not returned by the backend.</p>
+          )}
+        </div>
       </div>
     </div>
   );
