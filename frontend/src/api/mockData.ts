@@ -11,7 +11,6 @@
 
 export type RequestUrgency = "Low" | "Normal" | "High";
 export type RequestStatus = "Pending" | "Approved" | "Fulfilled";
-
 export interface DemoRequest {
   id: string;
   hospital: string;
@@ -53,5 +52,46 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     id: "req-106", hospital: "Hospital C", medicine: "Insulin Glargine",
     quantity: 400, urgency: "Normal", status: "Approved",
     date: "2026-10-04", note: "ICU buffer top-up",
+  },
+];
+
+/** A donor's offer to help with a request. Transport readiness is first-class:
+ * a farther donor with a van ready beats a nearer donor with no transport. */
+export interface DemoOffer {
+  id: string;
+  requestId: string;
+  donor: string;
+  quantity: number;
+  canTransportImmediately: boolean;
+  etaHours: number | null; // set when transport is NOT immediate
+  date: string;
+  note: string;
+}
+
+export const DEMO_OFFERS: DemoOffer[] = [
+  {
+    id: "off-201", requestId: "req-101", donor: "Hospital A",
+    quantity: 300, canTransportImmediately: false, etaHours: 6,
+    date: "2026-10-07", note: "0.7 km away, but no cold-chain vehicle free until evening",
+  },
+  {
+    id: "off-202", requestId: "req-101", donor: "Hospital C",
+    quantity: 200, canTransportImmediately: true, etaHours: 1,
+    date: "2026-10-07", note: "2 km away, van ready now",
+  },
+  {
+    id: "off-203", requestId: "req-103", donor: "Hospital D",
+    quantity: 800, canTransportImmediately: true, etaHours: 2,
+    date: "2026-10-07", note: "Surplus from cancelled camp, driver on standby",
+  },
+  {
+    id: "off-204", requestId: "req-103", donor: "Hospital B",
+    quantity: 500, canTransportImmediately: false, etaHours: 8,
+    date: "2026-10-08", note: "Needs pickup — no vehicle available today",
+  },
+  {
+    id: "off-205", requestId: "req-102", donor: "Hospital A",
+    quantity: 1500, canTransportImmediately: true, etaHours: 3,
+    date: "2026-10-06", note: "Expiring batch, can dispatch today",
   },
 ];
