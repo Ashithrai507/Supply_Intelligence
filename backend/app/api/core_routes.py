@@ -9,9 +9,10 @@ These are the convenience paths the dashboard and every workstream curl against:
   POST /api/copilot                       → LLM copilot (issue #17)
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.api._fixtures import load_fixture
+from app.core.security import require_admin, require_read
 from app.schemas.assistant import CopilotRequest, CopilotResponse
 from app.schemas.forecast import ForecastBundle
 from app.schemas.redistribution import ExplainResponse, OptimizeRequest, OptimizeResponse
@@ -20,7 +21,12 @@ from app.schemas.state import NetworkResponse, StateResponse
 router = APIRouter(prefix="/api")
 
 
-@router.get("/state", response_model=StateResponse, summary="Dashboard state (PLAN.md §5)")
+@router.get(
+    "/state",
+    response_model=StateResponse,
+    summary="Dashboard state (PLAN.md §5)",
+    dependencies=[Depends(require_read)],
+)
 def get_state(scenario: str = "normal") -> dict:
     stored = dict(load_fixture("state"))
     stored["scenario"] = scenario if scenario in {
@@ -29,7 +35,12 @@ def get_state(scenario: str = "normal") -> dict:
     return stored
 
 
-@router.get("/network", response_model=NetworkResponse, summary="Hospital network for map")
+@router.get(
+    "/network",
+    response_model=NetworkResponse,
+    summary="Hospital network for map",
+    dependencies=[Depends(require_read)],
+)
 def get_network() -> dict:
     return load_fixture("network")
 
@@ -38,6 +49,7 @@ def get_network() -> dict:
     "/forecast/{facility_id}/{medicine_id}",
     response_model=ForecastBundle,
     summary="Multi-horizon forecast bundle (7/14/30 days + quantiles)",
+    dependencies=[Depends(require_read)],
 )
 def get_forecast_bundle(facility_id: str, medicine_id: str) -> dict:
     stored = dict(load_fixture("forecast_bundle"))
@@ -50,6 +62,7 @@ def get_forecast_bundle(facility_id: str, medicine_id: str) -> dict:
     "/redistribution/optimize",
     response_model=OptimizeResponse,
     summary="Optimize redistribution (PLAN.md §5 alias)",
+    dependencies=[Depends(require_admin)],
 )
 def optimize_alias(request: OptimizeRequest) -> dict:
     _ = request
@@ -60,6 +73,7 @@ def optimize_alias(request: OptimizeRequest) -> dict:
     "/transfers/{transfer_id}/explain",
     response_model=ExplainResponse,
     summary="Deterministic WHY-THIS-ACTION card (no LLM)",
+    dependencies=[Depends(require_read)],
 )
 def explain_transfer(transfer_id: str) -> dict:
     stored = dict(load_fixture("transfer_explain"))
@@ -67,7 +81,12 @@ def explain_transfer(transfer_id: str) -> dict:
     return stored
 
 
-@router.post("/copilot", response_model=CopilotResponse, summary="LLM operations copilot (mock)")
+@router.post(
+    "/copilot",
+    response_model=CopilotResponse,
+    summary="LLM operations copilot (mock)",
+    dependencies=[Depends(require_read)],
+)
 def copilot(body: CopilotRequest) -> dict:
     _ = body
     return load_fixture("copilot")
