@@ -1,0 +1,14 @@
+{
+ "nodes":[
+  {"id":"fac-001","name":"MOCK Hospital A (demo)","type":"District","latitude":12.9716,"longitude":77.5946,"risk_level":"critical"},
+  {"id":"fac-002","name":"MOCK Hospital B (demo)","type":"Tertiary","latitude":12.9780,"longitude":77.6010,"risk_level":"ok"},
+  {"id":"fac-003","name":"MOCK Hospital C (demo)","type":"Community","latitude":12.9650,"longitude":77.5880,"risk_level":"warning"},
+  {"id":"fac-004","name":"MOCK Hospital D (demo)","type":"District","latitude":12.9820,"longitude":77.5920,"risk_level":"warning"}
+ ],
+ "edges":[
+  {"source_id":"fac-001","destination_id":"fac-002","distance_km":18.0,"transport_time_hours":2.1,"transport_capacity":5000,"active_transfer_units":1500},
+  {"source_id":"fac-002","destination_id":"fac-003","distance_km":9.5,"transport_time_hours":1.2,"transport_capacity":4000,"active_transfer_units":2000},
+  {"source_id":"fac-003","destination_id":"fac-004","distance_km":12.4,"transport_time_hours":1.6,"transport_capacity":3000,"active_transfer_units":0},
+  {"source_id":"fac-004","destination_id":"fac-001","distance_km":6.8,"transport_time_hours":0.9,"transport_capacity":4500,"active_transfer_units":800}
+ ]
+}

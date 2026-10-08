@@ -1,0 +1,11 @@
+{
+ "scenario":"normal",
+ "kpis":{"facilities":20,"medicines":40,"critical_shortages":7,"expiry_risks":13,"recommended_transfers":21,"expected_shortage_units":18400,"expected_wastage_units":9200,"stockout_facilities":8},
+ "alerts":[
+  {"severity":"critical","kind":"stockout","facility_id":"fac-001","facility_name":"MOCK Hospital A (demo)","medicine_id":"med-001","medicine_name":"MOCK Insulin","message":"Stock-out in 4.5 days","days_until_stockout":4.5,"units_at_risk":null},
+  {"severity":"warning","kind":"expiry","facility_id":"fac-002","facility_name":"MOCK Hospital B (demo)","medicine_id":"med-002","medicine_name":"MOCK Amoxicillin","message":"5,500 units at expiry risk in 18 days","days_until_stockout":null,"units_at_risk":5500}
+ ],
+ "risk_cards":[
+  {"facility_id":"fac-001","facility_name":"MOCK Hospital A (demo)","medicine_id":"med-001","medicine_name":"MOCK Insulin","current_stock":2340,"predicted_daily_demand":520.0,"supplier_lead_time_days":7,"days_until_stockout":4.5,"stockout_probability":0.87,"risk_level":"critical","reasons":["Demand increased 34% vs 4-week average","Supplier lead time is 7 days (delay +3 days)"]}
+ ]
+}

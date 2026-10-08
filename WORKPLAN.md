@@ -22,6 +22,34 @@ Supabase CLI SQL migrations) · `supabase-py` + `psycopg` · pytest. Local servi
 **Shared contract:** the JSON schemas Skanda02 freezes in hour 2 are binding — every
 workstream returns/consumes those shapes. Interactions only through them.
 
+## Frozen contract — endpoints ↔ schemas ↔ fixtures (issue #4)
+
+Implemented in `backend/app/api/` (Pydantic response models in `backend/app/schemas/`,
+mock payloads in `backend/tests/fixtures/`). Until the real engines land, routers serve
+the fixtures; swap the loader, keep the shape.
+
+| Endpoint | Schema | Fixture | Real implementation |
+|---|---|---|---|
+| `GET /health` | inline | — | #2 ✅ scaffold |
+| `GET /api/state?scenario=` | `state.StateResponse` | `state.json` | #16 wiring |
+| `GET /api/network` | `state.NetworkResponse` | `network.json` | #16 wiring |
+| `GET /api/forecast/{fac}/{med}` | `forecast.ForecastBundle` | `forecast_bundle.json` | #13 forecaster |
+| `POST /api/redistribution/optimize` (+ `/api/v1` alias) | `redistribution.OptimizeResponse` | `optimize.json` | #7 optimizer |
+| `GET /api/transfers/{id}/explain` | `redistribution.ExplainResponse` | `transfer_explain.json` | #12 reason cards |
+| `POST /api/copilot` / `POST /api/v1/assistant/query` | `assistant.CopilotResponse` | `copilot.json` / `assistant.json` | #17 copilot |
+| `GET /api/v1/auth/me` | `catalog.MeResponse` | `me.json` | #8 JWT+RBAC |
+| `GET/POST /api/v1/facilities` | `catalog.Facility` | `facilities.json` | #16 wiring |
+| `GET /api/v1/medicines` | `catalog.Medicine` | `medicines.json` | #16 wiring |
+| `GET/POST /api/v1/inventory` | `catalog.InventoryItem` | `inventory.json` | #16 wiring |
+| `GET/POST /api/v1/demand` | `catalog.DemandPoint` | `demand.json` | #16 wiring |
+| `GET/POST /api/v1/forecasts` (+ `/run`) | `forecast.ForecastRecord` | `forecasts.json` | #13 forecaster |
+| `GET /api/v1/risks/stockout` | `risk.StockoutRiskCard` | `risks_stockout.json` | #14 stock-out |
+| `GET /api/v1/risks/expiry` | `risk.ExpiryRiskCard` | `risks_expiry.json` | #15 expiry |
+| `GET /api/v1/redistribution/recommendations[/{id}]` | `redistribution.Recommendation` | `recommendations.json` | #7+#16 wiring |
+| `POST/GET /api/v1/scenarios[/{id}/run]` | `scenario.*` | `scenarios.json`, `scenario_run.json` | #16 scenario engine |
+
+Schema changes need all four workstreams to agree.
+
 ## Build order (dependencies)
 
 ```
