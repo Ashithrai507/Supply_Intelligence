@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   DEMO_OFFERS,
   DEMO_REQUESTS,
+  fillerRoute,
   type DemoOffer,
   type DemoRequest,
   type RequestStatus,
@@ -10,6 +11,7 @@ import {
 import { getMedicines } from "../api/forecast";
 import { useAuth } from "../context/AuthContext";
 import DemoBadge from "../components/DemoBadge";
+import OfferMap from "../components/OfferMap";
 
 const URGENCIES: RequestUrgency[] = ["Low", "Normal", "High"];
 const STATUSES: Array<"All" | RequestStatus> = ["All", "Pending", "Approved", "Fulfilled"];
@@ -30,19 +32,27 @@ const FALLBACK_MEDICINES = Array.from(new Set(DEMO_REQUESTS.map((r) => r.medicin
 
 const inputCls = "w-full rounded border border-gray-300 px-2 py-1 text-sm";
 
-/** Best offer first: immediate transport beats waiting, then larger quantity. */
+/** Best offer first: ready now beats waiting; among ready donors the fastest
+ * route wins (traffic-aware); then larger quantity. */
 function sortOffers(offers: DemoOffer[]): DemoOffer[] {
   return [...offers].sort((a, b) => {
     if (a.canTransportImmediately !== b.canTransportImmediately) {
       return a.canTransportImmediately ? -1 : 1;
+    }
+    if (a.canTransportImmediately && b.canTransportImmediately && a.travelMinutes !== b.travelMinutes) {
+      return a.travelMinutes - b.travelMinutes;
+    }
+    if (!a.canTransportImmediately && !b.canTransportImmediately && (a.etaHours ?? 999) !== (b.etaHours ?? 999)) {
+      return (a.etaHours ?? 999) - (b.etaHours ?? 999);
     }
     return b.quantity - a.quantity;
   });
 }
 
 function transportLabel(o: DemoOffer): string {
-  if (o.canTransportImmediately) return `Immediate transport (~${o.etaHours ?? 1}h)`;
-  return o.etaHours != null ? `Pickup needed (~${o.etaHours}h)` : "Pickup needed";
+  const route = `${o.distanceKm}km · ${o.travelMinutes}min · ${o.traffic} traffic`;
+  if (o.canTransportImmediately) return `Immediate transport (${route})`;
+  return o.etaHours != null ? `Pickup needed, ~${o.etaHours}h (${route})` : `Pickup needed (${route})`;
 }
 
 /** Requests page: network board + click-through detail with grant/help offers. */
@@ -155,6 +165,7 @@ export default function Requests() {
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
+    const route = fillerRoute(requester, selected.id);
     setOffers((prev) => [
       {
         id: `off-${Date.now()}`,
@@ -163,6 +174,9 @@ export default function Requests() {
         quantity: Math.floor(qty),
         canTransportImmediately: offerTransport,
         etaHours: Math.floor(eta),
+        distanceKm: route.distanceKm,
+        traffic: route.traffic,
+        travelMinutes: route.travelMinutes,
         date: today,
         note: offerTransport ? "Vehicle ready now" : "Needs pickup arrangement",
       },
@@ -287,6 +301,9 @@ export default function Requests() {
               )}
             </div>
 
+            <h4 className="mb-2 mt-4 font-semibold">Donor routes (traffic-aware)</h4>
+            <OfferMap requester={selected.hospital} offers={selectedOffers} />
+
             <h4 className="mb-2 mt-4 font-semibold">Offers ({selectedOffers.length})</h4>
             {selectedOffers.length === 0 ? (
               <p className="rounded border border-gray-200 bg-white p-4 text-center text-sm text-gray-600">
@@ -311,7 +328,7 @@ export default function Requests() {
                     <p className="mt-1 text-sm">{o.quantity.toLocaleString()} units · {o.note}</p>
                     <p className="text-xs text-gray-400">Offered {o.date}</p>
                     {i === 0 && o.canTransportImmediately && (
-                      <p className="mt-1 text-xs font-semibold text-green-700">Suggested: fastest to the requester</p>
+                      <p className="mt-1 text-xs font-semibold text-green-700">Suggested: fastest route to the requester</p>
                     )}
                   </li>
                 ))}

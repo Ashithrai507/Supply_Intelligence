@@ -56,7 +56,11 @@ export const DEMO_REQUESTS: DemoRequest[] = [
 ];
 
 /** A donor's offer to help with a request. Transport readiness is first-class:
- * a farther donor with a van ready beats a nearer donor with no transport. */
+ * a farther donor with a van ready beats a nearer donor with no transport.
+ * Route fields (distance/traffic/travel time) decide between equally-ready
+ * donors — currently filler values, later from a routing/traffic API. */
+export type TrafficLevel = "Low" | "Moderate" | "Heavy";
+
 export interface DemoOffer {
   id: string;
   requestId: string;
@@ -64,34 +68,57 @@ export interface DemoOffer {
   quantity: number;
   canTransportImmediately: boolean;
   etaHours: number | null; // set when transport is NOT immediate
+  distanceKm: number; // donor → requester road distance (filler)
+  traffic: TrafficLevel; // route congestion (filler)
+  travelMinutes: number; // expected travel time incl. traffic (filler)
   date: string;
   note: string;
+}
+
+/** Deterministic filler route for offers created in the UI (no backend yet). */
+export function fillerRoute(donor: string, requestId: string): {
+  distanceKm: number;
+  traffic: TrafficLevel;
+  travelMinutes: number;
+} {
+  let seed = 0;
+  for (const ch of `${donor}:${requestId}`) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const distanceKm = Math.round((1 + ((seed % 40) / 10)) * 10) / 10; // 1.0–5.0 km
+  const traffic: TrafficLevel = seed % 3 === 0 ? "Heavy" : seed % 3 === 1 ? "Moderate" : "Low";
+  const speedKmh = traffic === "Low" ? 30 : traffic === "Moderate" ? 20 : 12;
+  const travelMinutes = Math.max(5, Math.round((distanceKm / speedKmh) * 60));
+  return { distanceKm, traffic, travelMinutes };
 }
 
 export const DEMO_OFFERS: DemoOffer[] = [
   {
     id: "off-201", requestId: "req-101", donor: "Hospital A",
     quantity: 300, canTransportImmediately: false, etaHours: 6,
+    distanceKm: 0.7, traffic: "Low", travelMinutes: 5,
     date: "2026-10-07", note: "0.7 km away, but no cold-chain vehicle free until evening",
   },
   {
     id: "off-202", requestId: "req-101", donor: "Hospital C",
     quantity: 200, canTransportImmediately: true, etaHours: 1,
+    distanceKm: 2.0, traffic: "Moderate", travelMinutes: 12,
     date: "2026-10-07", note: "2 km away, van ready now",
   },
   {
     id: "off-203", requestId: "req-103", donor: "Hospital D",
     quantity: 800, canTransportImmediately: true, etaHours: 2,
-    date: "2026-10-07", note: "Surplus from cancelled camp, driver on standby",
+    distanceKm: 1.0, traffic: "Heavy", travelMinutes: 22,
+    date: "2026-10-07", note: "Surplus from cancelled camp, driver on standby — heavy traffic on the ring road",
   },
   {
     id: "off-204", requestId: "req-103", donor: "Hospital B",
     quantity: 500, canTransportImmediately: false, etaHours: 8,
+    distanceKm: 1.0, traffic: "Low", travelMinutes: 6,
     date: "2026-10-08", note: "Needs pickup — no vehicle available today",
   },
   {
     id: "off-205", requestId: "req-102", donor: "Hospital A",
     quantity: 1500, canTransportImmediately: true, etaHours: 3,
+    distanceKm: 3.5, traffic: "Moderate", travelMinutes: 18,
     date: "2026-10-06", note: "Expiring batch, can dispatch today",
   },
 ];
