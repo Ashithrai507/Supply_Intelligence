@@ -30,3 +30,6 @@ supabase/.branches/
 # Node (Phase 2)
 node_modules/
 dist/
+
+# macOS
+.DS_Store
