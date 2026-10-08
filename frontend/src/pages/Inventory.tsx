@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, riskOf, type InventoryRow, type RiskLevel } from "../api/client";
+import { api, demoState, riskOf, type InventoryRow, type RiskLevel } from "../api/client";
+import DemoBadge from "../components/DemoBadge";
 import RiskBadge from "../components/RiskBadge";
 
 const RISK_OPTIONS: Array<"All" | RiskLevel> = ["All", "Critical", "High", "Medium", "Safe"];
@@ -26,6 +27,7 @@ export default function Inventory() {
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   const [hospital, setHospital] = useState("All");
   const [medicine, setMedicine] = useState("All");
@@ -38,7 +40,10 @@ export default function Inventory() {
   useEffect(() => {
     api
       .getInventory()
-      .then((data) => setRows(data))
+      .then((data) => {
+        setRows(data);
+        setIsDemo(demoState.active);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, []);
@@ -83,7 +88,7 @@ export default function Inventory() {
   return (
     <div>
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-xl font-semibold">Inventory</h2>
+        <h2 className="text-xl font-semibold">Inventory {isDemo && <DemoBadge />}</h2>
         <p className="text-sm text-gray-600">
           Showing {filtered.length} of {rows.length} records
         </p>

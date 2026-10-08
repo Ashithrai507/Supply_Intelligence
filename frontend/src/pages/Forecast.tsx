@@ -11,9 +11,11 @@ import {
 } from "recharts";
 import {
   api,
+  demoState,
   type ForecastRow,
   type ForecastSeries,
 } from "../api/client";
+import DemoBadge from "../components/DemoBadge";
 
 const CONFIDENCE_STYLES: Record<ForecastRow["confidence"], string> = {
   high: "bg-green-100 text-green-800 border-green-300",
@@ -36,12 +38,14 @@ export default function Forecast() {
   const [medicineId, setMedicineId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     api
       .getForecast()
       .then((data) => {
         setRows(data);
+        setIsDemo(demoState.active);
         if (data.length > 0) {
           const first = data[0];
           setHospitalId(first.hospital_id);
@@ -101,7 +105,7 @@ export default function Forecast() {
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-semibold">Demand Forecast</h2>
+      <h2 className="mb-4 text-xl font-semibold">Demand Forecast {isDemo && <DemoBadge />}</h2>
 
       <div className="mb-4 flex flex-wrap gap-3 rounded border border-gray-200 bg-gray-50 p-3">
         <label className="flex items-center gap-1 text-sm">

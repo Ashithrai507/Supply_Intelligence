@@ -3,10 +3,21 @@
  * Contract: Phase 1 T4 (#31) — GET /hospitals, /medicines, /inventory, /demand-history.
  */
 
+import { DEMO_FORECASTS, DEMO_INVENTORY, demoSeries } from "./mockData";
+
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
+export const demoState = { active: false };
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`);
+  } catch {
+    // Backend unreachable (e.g. #31 not landed yet) → presentation filler data.
+    demoState.active = true;
+    return mockFor(path) as T;
+  }
   if (!res.ok) {
     throw new Error(`GET ${path} failed: ${res.status} ${res.statusText}`);
   }
@@ -57,6 +68,25 @@ export interface ForecastPoint {
 export interface ForecastSeries {
   history: HistoryPoint[];
   forecast: ForecastPoint[];
+}
+
+/** Presentation fallback routing: API path → filler payload (same contract shapes). */
+function mockFor(path: string): unknown {
+  const [route, query] = path.split("?");
+  if (route === "/inventory") return DEMO_INVENTORY;
+  if (route === "/forecast") {
+    const params = new URLSearchParams(query ?? "");
+    const hid = params.get("hospital_id");
+    const mid = params.get("medicine_id");
+    return DEMO_FORECASTS.filter(
+      (r) => (!hid || r.hospital_id === hid) && (!mid || r.medicine_id === mid),
+    );
+  }
+  if (route === "/forecast/series") {
+    const params = new URLSearchParams(query ?? "");
+    return demoSeries(params.get("hospital_id") ?? "", params.get("medicine_id") ?? "");
+  }
+  throw new Error(`No demo data for GET ${path} and backend is unreachable`);
 }
 
 export const api = {
