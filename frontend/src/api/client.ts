@@ -29,8 +29,49 @@ export interface InventoryRow {
   alternative_available: boolean;
 }
 
+/** One row of GET /forecast (T6 spec). */
+export interface ForecastRow {
+  hospital_id: string;
+  hospital_name: string;
+  medicine_id: string;
+  medicine_name: string;
+  baseline_daily_demand: number;
+  predicted_daily_demand: number;
+  predicted_weekly_demand: number;
+  trend_growth_pct: number;
+  outbreak_multiplier: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface HistoryPoint {
+  date: string;
+  quantity_used: number;
+}
+
+export interface ForecastPoint {
+  date: string;
+  predicted_daily: number;
+}
+
+/** GET /forecast/series (T6 spec): last 30 history + next 14 forecast points. */
+export interface ForecastSeries {
+  history: HistoryPoint[];
+  forecast: ForecastPoint[];
+}
+
 export const api = {
   getInventory: () => get<InventoryRow[]>("/inventory"),
+  getForecast: (hospitalId?: string, medicineId?: string) => {
+    const params = new URLSearchParams();
+    if (hospitalId) params.set("hospital_id", hospitalId);
+    if (medicineId) params.set("medicine_id", medicineId);
+    const qs = params.toString();
+    return get<ForecastRow[]>(`/forecast${qs ? `?${qs}` : ""}`);
+  },
+  getForecastSeries: (hospitalId: string, medicineId: string) =>
+    get<ForecastSeries>(
+      `/forecast/series?hospital_id=${encodeURIComponent(hospitalId)}&medicine_id=${encodeURIComponent(medicineId)}`,
+    ),
 };
 
 export type RiskLevel = "Critical" | "High" | "Medium" | "Safe";
