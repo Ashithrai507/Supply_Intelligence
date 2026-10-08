@@ -43,6 +43,11 @@ def create_app() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list or ["http://localhost:5173"],
+        # Vite bumps the dev-server port when 5173 is taken; in development accept
+        # any loopback origin so the browser isn't blocked by a port mismatch.
+        allow_origin_regex=(
+            r"http://(localhost|127\.0\.0\.1)(:\d+)?" if settings.is_development else None
+        ),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
