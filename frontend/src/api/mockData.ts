@@ -71,6 +71,7 @@ export interface DemoOffer {
   distanceKm: number; // donor → requester road distance (filler)
   traffic: TrafficLevel; // route congestion (filler)
   travelMinutes: number; // expected travel time incl. traffic (filler)
+  estimatedCost: number | null; // donor's estimated fulfilment cost in ₹ (null = not shared)
   date: string;
   note: string;
 }
@@ -111,31 +112,31 @@ export const DEMO_OFFERS: DemoOffer[] = [
   {
     id: "off-201", requestId: "req-101", donor: "Hospital A",
     quantity: 300, canTransportImmediately: false, etaHours: 6,
-    distanceKm: 0.7, traffic: "Low", travelMinutes: 5,
+    distanceKm: 0.7, traffic: "Low", travelMinutes: 5, estimatedCost: 4500,
     date: "2026-10-07", note: "0.7 km away, but no cold-chain vehicle free until evening",
   },
   {
     id: "off-202", requestId: "req-101", donor: "Hospital C",
     quantity: 200, canTransportImmediately: true, etaHours: 1,
-    distanceKm: 2.0, traffic: "Moderate", travelMinutes: 12,
+    distanceKm: 2.0, traffic: "Moderate", travelMinutes: 12, estimatedCost: 2800,
     date: "2026-10-07", note: "2 km away, van ready now",
   },
   {
     id: "off-203", requestId: "req-103", donor: "Hospital D",
     quantity: 800, canTransportImmediately: true, etaHours: 2,
-    distanceKm: 1.0, traffic: "Heavy", travelMinutes: 22,
+    distanceKm: 1.0, traffic: "Heavy", travelMinutes: 22, estimatedCost: 9600,
     date: "2026-10-07", note: "Surplus from cancelled camp, driver on standby — heavy traffic on the ring road",
   },
   {
     id: "off-204", requestId: "req-103", donor: "Hospital B",
     quantity: 500, canTransportImmediately: false, etaHours: 8,
-    distanceKm: 1.0, traffic: "Low", travelMinutes: 6,
+    distanceKm: 1.0, traffic: "Low", travelMinutes: 6, estimatedCost: null,
     date: "2026-10-08", note: "Needs pickup — no vehicle available today",
   },
   {
     id: "off-205", requestId: "req-102", donor: "Hospital A",
     quantity: 1500, canTransportImmediately: true, etaHours: 3,
-    distanceKm: 3.5, traffic: "Moderate", travelMinutes: 18,
+    distanceKm: 3.5, traffic: "Moderate", travelMinutes: 18, estimatedCost: 12000,
     date: "2026-10-06", note: "Expiring batch, can dispatch today",
   },
 ];
