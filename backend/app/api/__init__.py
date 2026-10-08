@@ -46,5 +46,6 @@ api_router.include_router(core_routes.router, tags=["core"])
 # Convenience paths for frontend without /v1
 api_router.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 api_router.include_router(hospitals.router, prefix="/api/hospitals", tags=["hospitals"])
+api_router.include_router(medicines.router, prefix="/api/medicines", tags=["medicines"])
 api_router.include_router(procurement.router, prefix="/api/procurement", tags=["procurement"])
 api_router.include_router(simulation.router, prefix="/api/simulation", tags=["simulation"])
