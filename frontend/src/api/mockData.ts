@@ -38,21 +38,6 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     quantity: 1200, urgency: "Normal", status: "Pending",
     date: "2026-10-07", note: "Post-surgical ward restock",
   },
-  {
-    id: "req-104", hospital: "Hospital D", medicine: "Amoxicillin",
-    quantity: 600, urgency: "Low", status: "Pending",
-    date: "2026-10-05", note: "Routine restock for flu season",
-  },
-  {
-    id: "req-105", hospital: "Hospital A", medicine: "Oral Rehydration Salts",
-    quantity: 2000, urgency: "Low", status: "Fulfilled",
-    date: "2026-10-02", note: "Monsoon preparedness stock",
-  },
-  {
-    id: "req-106", hospital: "Hospital C", medicine: "Insulin Glargine",
-    quantity: 400, urgency: "Normal", status: "Approved",
-    date: "2026-10-04", note: "ICU buffer top-up",
-  },
 ];
 
 /** A donor's offer to help with a request. Transport readiness is first-class:
