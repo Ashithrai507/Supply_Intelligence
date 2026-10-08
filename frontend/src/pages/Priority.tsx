@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   X,
@@ -13,7 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DEMO_PRIORITIES } from "../api/mockData";
+import { getNetworkPriorities, type PriorityRow } from "../api/medpredict";
 import { useAuth } from "../context/AuthContext";
 import RiskBadge from "../components/RiskBadge";
 
@@ -33,16 +33,29 @@ const DIMENSIONS = [
 
 export default function Priority() {
   const { user } = useAuth();
-  const currentHospitalName = user?.name ?? "City General Hospital";
+  const currentHospitalName = user?.name ?? "Hospital A";
+
+  const [priorities, setPriorities] = useState<PriorityRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [levelFilter, setLevelFilter] = useState<"All" | "Critical" | "High" | "Medium">("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const myPriority = DEMO_PRIORITIES.find((p) => p.hospital === currentHospitalName);
-  const myRank = DEMO_PRIORITIES.findIndex((p) => p.hospital === currentHospitalName) + 1;
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getNetworkPriorities()
+      .then(setPriorities)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const myPriority = priorities.find((p) => p.hospital === currentHospitalName);
+  const myRank = priorities.findIndex((p) => p.hospital === currentHospitalName) + 1;
 
   const filteredPriorities = useMemo(() => {
-    return DEMO_PRIORITIES.filter((p) => {
+    return priorities.filter((p) => {
       if (levelFilter !== "All" && p.level !== levelFilter) return false;
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
@@ -52,7 +65,24 @@ export default function Priority() {
       }
       return true;
     });
-  }, [levelFilter, searchTerm]);
+  }, [priorities, levelFilter, searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+        Computing network priority scores…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+        <h3 className="font-bold">Could not load network priorities</h3>
+        <p className="mt-1 text-xs text-rose-700">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -64,6 +94,7 @@ export default function Priority() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Network priority ranking determining urgency for incoming emergency supply redistributions.
+            Scores are derived deterministically from each facility's live stock-out risk signals.
           </p>
         </div>
       </div>
@@ -77,7 +108,7 @@ export default function Priority() {
                 <span className="rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
                   Your Facility Status
                 </span>
-                <span className="text-xs font-bold text-slate-700">Rank #{myRank} of 4</span>
+                <span className="text-xs font-bold text-slate-700">Rank #{myRank} of {priorities.length}</span>
               </div>
               <h3 className="text-base font-extrabold text-slate-900 mt-1">
                 {currentHospitalName} — Composite Score {myPriority.score}/100
@@ -112,7 +143,7 @@ export default function Priority() {
 
         <ResponsiveContainer width="100%" height={240}>
           <BarChart
-            data={DEMO_PRIORITIES.map((p) => ({
+            data={priorities.map((p) => ({
               name: p.hospital.split(" ")[0],
               score: p.score,
               level: p.level,
@@ -146,7 +177,7 @@ export default function Priority() {
               }}
             />
             <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-              {DEMO_PRIORITIES.map((p) => (
+              {priorities.map((p) => (
                 <Cell key={p.hospital_id} fill={BAR_COLORS[p.level] ?? "#64748b"} />
               ))}
             </Bar>
@@ -163,7 +194,7 @@ export default function Priority() {
               levelFilter === "All" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            All Tiers ({DEMO_PRIORITIES.length})
+            All Tiers ({priorities.length})
           </button>
           <button
             onClick={() => setLevelFilter("Critical")}

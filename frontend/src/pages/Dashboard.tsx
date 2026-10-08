@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -14,14 +14,15 @@ import {
   TrendingUp,
   Truck,
 } from "lucide-react";
-import { riskOf } from "../api/client";
+import { riskOf, type InventoryRow } from "../api/client";
 import {
-  DEMO_FORECASTS,
-  DEMO_INVENTORY,
-  DEMO_PRIORITIES,
-  DEMO_REQUESTS,
-  DEMO_TRANSFERS,
-} from "../api/mockData";
+  getInventoryRows,
+  getNetworkPriorities,
+  getTransferRows,
+  type PriorityRow,
+  type TransferRow,
+} from "../api/medpredict";
+import { DEMO_REQUESTS } from "../api/mockData";
 import { useAuth } from "../context/AuthContext";
 import ForecastAlerts from "../components/ForecastAlerts";
 import RiskBadge from "../components/RiskBadge";
@@ -32,30 +33,49 @@ function daysToExpiry(expiryDate: string): number {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const currentHospitalName = user?.name ?? "City General Hospital";
+  const currentHospitalName = user?.name ?? "Hospital A";
 
-  // Filter strictly to logged-in organization
+  const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [priorities, setPriorities] = useState<PriorityRow[]>([]);
+  const [transfers, setTransfers] = useState<TransferRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      getInventoryRows(user.id),
+      getNetworkPriorities(),
+      getTransferRows(user.id),
+    ])
+      .then(([inv, prio, trans]) => {
+        setInventory(inv);
+        setPriorities(prio);
+        setTransfers(trans);
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  // Data is already scoped to the authenticated facility by the API.
   const scopedInventory = useMemo(
-    () => DEMO_INVENTORY.filter((r) => r.hospital === currentHospitalName),
-    [currentHospitalName],
-  );
-
-  const scopedForecasts = useMemo(
-    () => DEMO_FORECASTS.filter((r) => r.hospital_name === currentHospitalName),
-    [currentHospitalName],
+    () => inventory.filter((r) => r.hospital === currentHospitalName || r.hospital_id === user?.id),
+    [inventory, currentHospitalName, user],
   );
 
   const scopedTransfers = useMemo(
     () =>
-      DEMO_TRANSFERS.filter(
+      transfers.filter(
         (t) => t.from === currentHospitalName || t.to === currentHospitalName,
       ),
-    [currentHospitalName],
+    [transfers, currentHospitalName],
   );
 
   const scopedPriority = useMemo(
-    () => DEMO_PRIORITIES.find((p) => p.hospital === currentHospitalName),
-    [currentHospitalName],
+    () => priorities.find((p) => p.hospital === currentHospitalName),
+    [priorities, currentHospitalName],
   );
 
   const critical = scopedInventory.filter((r) => riskOf(r.days_left) === "Critical");
@@ -83,7 +103,7 @@ export default function Dashboard() {
     {
       to: "/forecast",
       title: "Demand Projections",
-      value: String(scopedForecasts.length),
+      value: String(scopedInventory.length),
       hint: "AI predictive surge models active for your facility",
       accent: "indigo",
       gradient: "from-indigo-500 to-blue-600",
@@ -153,6 +173,23 @@ export default function Dashboard() {
       icon: ClipboardList,
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+        Loading facility telemetry…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+        <h3 className="font-bold">Could not load the dashboard</h3>
+        <p className="mt-1 text-xs text-rose-700">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

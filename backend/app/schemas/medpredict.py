@@ -34,6 +34,7 @@ class BatchSchema(BaseModel):
 
 class MedicineInventoryDetail(BaseModel):
     hospital_id: str
+    hospital_name: str | None = None
     medicine_id: str
     medicine_name: str
     category: str
@@ -50,6 +51,7 @@ class MedicineInventoryDetail(BaseModel):
     batches: list[BatchSchema]
     incoming_purchase_orders_quantity: int = 0
     supplier_lead_time_days: int = 7
+    supplier_name: str | None = None
 
 
 class ForecastPoint(BaseModel):

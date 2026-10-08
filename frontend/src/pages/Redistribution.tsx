@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -17,18 +17,31 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DEMO_TRANSFERS } from "../api/mockData";
+import { getTransferRows, type TransferRow } from "../api/medpredict";
 import { useAuth } from "../context/AuthContext";
 
 export default function Redistribution() {
   const { user } = useAuth();
-  const currentHospitalName = user?.name ?? "City General Hospital";
+  const currentHospitalName = user?.name ?? "Hospital A";
 
-  const transfers = DEMO_TRANSFERS;
+  const [transfers, setTransfers] = useState<TransferRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [scopeMode, setScopeMode] = useState<"my-org" | "incoming" | "outgoing" | "all">("my-org");
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    getTransferRows(user.id)
+      .then(setTransfers)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -90,6 +103,23 @@ export default function Redistribution() {
     document.body.removeChild(link);
     showToast("Downloaded transfer manifest CSV.");
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+        Loading redistribution pipeline…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+        <h3 className="font-bold">Could not load live redistribution data</h3>
+        <p className="mt-1 text-xs text-rose-700">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
