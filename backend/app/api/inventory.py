@@ -1,45 +1,35 @@
-"""Inventory endpoints (project.md §13)."""
+"""Inventory API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
-from app.api._fixtures import load_fixture
-from app.core.security import require_admin, require_read
-from app.schemas.catalog import InventoryCreate, InventoryItem
+from app.core.database import get_db
+from app.schemas.medpredict import MedicineInventoryDetail
+from app.services.inventory_service import (
+    calculate_medicine_inventory,
+    list_hospital_inventory,
+)
 
 router = APIRouter()
 
 
-@router.get(
-    "",
-    response_model=list[InventoryItem],
-    summary="All inventory batches",
-    dependencies=[Depends(require_read)],
-)
-def list_inventory() -> list[dict]:
-    return load_fixture("inventory")
+@router.get("", response_model=list[MedicineInventoryDetail], summary="List inventory for hospital")
+def get_inventory(
+    hospital_id: str = Query(default="H01", description="Hospital ID"),
+    surge_multiplier: float = Query(default=1.0, description="Optional demand surge multiplier"),
+    db: Session = Depends(get_db),
+):
+    return list_hospital_inventory(db, hospital_id, surge_multiplier)
 
 
-@router.get(
-    "/{facility_id}",
-    response_model=list[InventoryItem],
-    summary="Facility inventory",
-    dependencies=[Depends(require_read)],
-)
-def get_facility_inventory(facility_id: str) -> list[dict]:
-    rows = [r for r in load_fixture("inventory") if r["facility_id"] == facility_id]
-    if not rows:
-        raise HTTPException(status_code=404, detail=f"No inventory for {facility_id}")
-    return rows
-
-
-@router.post(
-    "",
-    response_model=InventoryItem,
-    summary="Record inventory (mock)",
-    dependencies=[Depends(require_admin)],
-)
-def create_inventory(item: InventoryCreate) -> dict:
-    stored = dict(item.model_dump())
-    stored["id"] = "inv-new"
-    stored["reserved_quantity"] = 0
-    return stored
+@router.get("/{hospital_id}/{medicine_id}", response_model=MedicineInventoryDetail, summary="Get medicine inventory details")
+def get_medicine_inventory(
+    hospital_id: str,
+    medicine_id: str,
+    surge_multiplier: float = Query(default=1.0, description="Optional demand surge multiplier"),
+    db: Session = Depends(get_db),
+):
+    detail = calculate_medicine_inventory(db, hospital_id, medicine_id, surge_multiplier)
+    if not detail:
+        raise HTTPException(status_code=404, detail="Medicine or hospital not found")
+    return detail
