@@ -138,3 +138,88 @@ def test_auth_unconfigured_is_401(monkeypatch) -> None:
     resp = client.get("/api/state", headers=auth_headers("ADMIN"))
     assert resp.status_code == 401
     assert security.jwt_secret_configured() is False
+
+
+def test_login_hospital_success() -> None:
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "H01", "password": "supplyPass2026!"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "access_token" in data
+    assert data["user"]["role"] == "FACILITY_MANAGER"
+    assert data["user"]["facility_id"] == "H01"
+
+    # Token can access /api/v1/auth/me
+    token = data["access_token"]
+    me_resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me_resp.status_code == 200
+    assert me_resp.json()["facility_id"] == "H01"
+
+
+def test_login_admin_success() -> None:
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@medipulse.health", "password": "supplyPass2026!"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["user"]["role"] == "ADMIN"
+
+    # Admin can call /api/redistribution/optimize
+    token = data["access_token"]
+    opt_resp = client.post(
+        "/api/redistribution/optimize",
+        json={"scenario": "outbreak"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert opt_resp.status_code == 200
+
+
+def test_login_invalid_password() -> None:
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "H01", "password": "wrong_password"},
+    )
+    assert resp.status_code == 401
+
+
+def test_login_unknown_user() -> None:
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "nonexistent@hospital.org", "password": "supplyPass2026!"},
+    )
+    assert resp.status_code == 401
+
+
+READ_ONLY_ENDPOINTS = (
+    ("get", "/api/v1/dashboard"),
+    ("get", "/api/v1/hospitals"),
+    ("get", "/api/v1/hospitals/H01"),
+    ("get", "/api/v1/medicines"),
+    ("get", "/api/v1/medicines/M001"),
+    ("get", "/api/v1/inventory"),
+    ("get", "/api/v1/inventory/H01/M001"),
+    ("get", "/api/v1/procurement/recommendations"),
+    ("get", "/api/v1/procurement/redistribution"),
+    ("get", "/api/v1/risks/stockout"),
+    ("get", "/api/v1/risks/expiry"),
+    ("get", "/api/dashboard"),
+    ("get", "/api/hospitals"),
+    ("get", "/api/medicines"),
+    ("get", "/api/procurement/recommendations"),
+)
+
+
+@pytest.mark.parametrize("method,path", READ_ONLY_ENDPOINTS)
+def test_readonly_routes_require_auth(method, path):
+    resp = getattr(client, method)(path)
+    assert resp.status_code == 401
+
+
+@pytest.mark.parametrize("method,path", READ_ONLY_ENDPOINTS)
+def test_readonly_routes_open_to_all_roles(method, path):
+    for role in ("ADMIN", "FACILITY_MANAGER", "ANALYST"):
+        resp = getattr(client, method)(path, headers=auth_headers(role))
+        assert resp.status_code not in (401, 403), f"{role} {method} {path} -> {resp.status_code}"

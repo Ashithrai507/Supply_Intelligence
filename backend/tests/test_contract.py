@@ -123,7 +123,7 @@ def test_post_endpoints_match_contract() -> None:
 
 def test_api_alias_medicines_for_frontend() -> None:
     """Frontend calls GET /api/medicines (forecast.ts) — the non-v1 alias must exist."""
-    resp = client.get("/api/medicines")
+    resp = client.get("/api/medicines", headers=admin_headers())
     assert resp.status_code == 200, f"/api/medicines -> {resp.status_code}"
     body = resp.json()
     assert isinstance(body, list) and body

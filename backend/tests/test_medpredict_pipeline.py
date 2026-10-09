@@ -114,18 +114,26 @@ def test_8_api_endpoints_end_to_end(client: TestClient):
     r = client.get("/health")
     assert r.status_code == 200
 
+    # Authenticate for the protected endpoints below
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@medipulse.health", "password": "supplyPass2026!"},
+    )
+    assert login.status_code == 200
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
     # Hospitals
-    r = client.get("/api/v1/hospitals")
+    r = client.get("/api/v1/hospitals", headers=headers)
     assert r.status_code == 200
     assert len(r.json()) >= 8
 
     # Medicines
-    r = client.get("/api/v1/medicines")
+    r = client.get("/api/v1/medicines", headers=headers)
     assert r.status_code == 200
     assert len(r.json()) >= 50
 
     # Dashboard
-    r = client.get("/api/v1/dashboard?hospital_id=H01")
+    r = client.get("/api/v1/dashboard?hospital_id=H01", headers=headers)
     assert r.status_code == 200
     dash = r.json()
     assert "kpis" in dash

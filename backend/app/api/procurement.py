@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.security import require_read
 from app.schemas.medpredict import ProcurementRecommendation, SimpleRedistribution
 from app.services.procurement_service import (
     generate_procurement_recommendations,
@@ -13,7 +14,12 @@ from app.services.procurement_service import (
 router = APIRouter()
 
 
-@router.get("/recommendations", response_model=list[ProcurementRecommendation], summary="Get procurement recommendations")
+@router.get(
+    "/recommendations",
+    response_model=list[ProcurementRecommendation],
+    summary="Get procurement recommendations",
+    dependencies=[Depends(require_read)],
+)
 def get_recommendations(
     hospital_id: str = Query(default="H01", description="Hospital ID"),
     surge_multiplier: float = Query(default=1.0, description="Optional demand surge multiplier"),
@@ -22,7 +28,12 @@ def get_recommendations(
     return generate_procurement_recommendations(db, hospital_id, surge_multiplier)
 
 
-@router.get("/redistribution", response_model=list[SimpleRedistribution], summary="Get simple redistribution suggestions")
+@router.get(
+    "/redistribution",
+    response_model=list[SimpleRedistribution],
+    summary="Get simple redistribution suggestions",
+    dependencies=[Depends(require_read)],
+)
 def get_redistributions(
     hospital_id: str = Query(default="H01", description="Hospital ID"),
     db: Session = Depends(get_db),

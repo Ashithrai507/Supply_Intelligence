@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  Check,
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import { PRESET_HOSPITALS, useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function UserProfileMenu() {
-  const { user, logout, switchHospital } = useAuth();
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,39 +54,11 @@ export default function UserProfileMenu() {
             <p className="text-[11px] text-slate-600">
               {user.userName} • {user.role}
             </p>
-          </div>
-
-          {/* Switch Organization */}
-          <div className="py-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1 mb-1">
-              Switch Facility
-            </p>
-            <div className="space-y-0.5">
-              {PRESET_HOSPITALS.map((h) => {
-                const isActive = h.id === user.id;
-                return (
-                  <button
-                    key={h.id}
-                    onClick={() => {
-                      switchHospital(h.id);
-                      setOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between rounded-md px-2 py-1.5 text-xs text-left transition-colors ${
-                      isActive
-                        ? "bg-slate-900 text-white font-semibold"
-                        : "text-slate-700 hover:bg-slate-100 font-medium"
-                    }`}
-                  >
-                    <span className="truncate">{h.name}</span>
-                    {isActive && <Check className="h-3.5 w-3.5 text-white shrink-0 ml-1" />}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
           </div>
 
           {/* Logout */}
-          <div className="mt-2 pt-2 border-t border-slate-100">
+          <div className="pt-1 border-t border-slate-100">
             <button
               onClick={() => {
                 logout();
