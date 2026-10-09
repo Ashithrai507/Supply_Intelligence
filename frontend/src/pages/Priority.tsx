@@ -24,11 +24,11 @@ const BAR_COLORS: Record<string, string> = {
 };
 
 const DIMENSIONS = [
-  { key: "patientLoad", label: "Patient Load", max: 30, color: "bg-indigo-600", text: "text-indigo-700" },
-  { key: "emergency", label: "Emergency Surge", max: 30, color: "bg-rose-600", text: "text-rose-700" },
-  { key: "stockout", label: "Stockout Imminence", max: 30, color: "bg-amber-500", text: "text-amber-700" },
-  { key: "criticality", label: "Clinical Criticality", max: 30, color: "bg-purple-600", text: "text-purple-700" },
-  { key: "alternatives", label: "No Alternative SKUs", max: 10, color: "bg-sky-600", text: "text-sky-700" },
+  { key: "patientLoad", label: "Patient Load", max: 20, color: "bg-indigo-600", text: "text-indigo-700" },
+  { key: "emergency", label: "Emergency Surge", max: 20, color: "bg-rose-600", text: "text-rose-700" },
+  { key: "stockout", label: "Stockout Imminence", max: 20, color: "bg-amber-500", text: "text-amber-700" },
+  { key: "criticality", label: "Clinical Criticality", max: 20, color: "bg-purple-600", text: "text-purple-700" },
+  { key: "alternatives", label: "No Alternative SKUs", max: 20, color: "bg-sky-600", text: "text-sky-700" },
 ] as const;
 
 export default function Priority() {

@@ -328,10 +328,10 @@ export interface PriorityRow {
 }
 
 const CRITICALITY_WEIGHT: Record<string, number> = {
-  CRITICAL: 30,
-  HIGH: 22,
-  MEDIUM: 12,
-  LOW: 4,
+  CRITICAL: 20,
+  HIGH: 15,
+  MEDIUM: 8,
+  LOW: 3,
 };
 
 function scaleBreakdown(
@@ -364,21 +364,21 @@ export function priorityFor(hospital: HospitalOption, risks: StockoutRiskItem[])
   const worst = sorted[0];
   const worstDays = worst?.days_until_stockout ?? 999;
 
+  // Five dimensions, each out of 20 → total out of 100.
   const stockout =
-    worstDays >= 999 ? 0 : Math.max(0, Math.round((30 - worstDays * 6) * 10) / 10);
+    worstDays >= 999 ? 0 : Math.max(0, Math.round((20 - worstDays * 4) * 10) / 10);
   const criticality = atRisk.reduce(
     (max, r) => Math.max(max, CRITICALITY_WEIGHT[r.criticality_level] ?? 4),
     0,
   );
-  const patientLoad = Math.min(30, atRisk.length * 3);
-  const emergency = Math.min(30, criticalCount * 6);
-  const alternatives = atRisk.length > 0 ? 10 : 0;
+  const patientLoad = Math.min(20, Math.round(atRisk.length * 0.4));
+  const emergency = Math.min(20, criticalCount * 4);
+  const alternatives = atRisk.length > 0 ? 20 : 0;
 
   const raw: PriorityBreakdown = { patientLoad, emergency, stockout, criticality, alternatives };
   const rawSum = patientLoad + emergency + stockout + criticality + alternatives;
-  // Normalize to 0–100 against the theoretical max (30+30+30+30+10) so
-  // hospitals actually rank instead of all saturating at the cap.
-  const score = Math.round((rawSum / 130) * 100);
+  // Five dimensions × 20 = 100: the sum IS the score, no normalization needed.
+  const score = Math.round(rawSum);
   const level: PriorityRow["level"] = score >= 80 ? "Critical" : score >= 50 ? "High" : "Medium";
 
   const reason = worst
