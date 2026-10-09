@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Expiry from "./pages/Expiry";
 import Forecast from "./pages/Forecast";
+import Helpdesk from "./pages/Helpdesk";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 import Priority from "./pages/Priority";
@@ -31,6 +32,7 @@ const NAV_LINKS: NavLinkItem[] = [
   { to: "/redistribution", label: "Transfers" },
   { to: "/priority", label: "Priority" },
   { to: "/requests", label: "Requests" },
+  { to: "/helpdesk", label: "Helpdesk" },
 ];
 
 function AuthenticatedApp() {
@@ -136,6 +138,7 @@ function AuthenticatedApp() {
           <Route path="/redistribution" element={<Redistribution />} />
           <Route path="/priority" element={<Priority />} />
           <Route path="/requests" element={<Requests />} />
+          <Route path="/helpdesk" element={<Helpdesk />} />
         </Routes>
       </main>
 

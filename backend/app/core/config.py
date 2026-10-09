@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # AI copilot (built last — issue #17)
     LLM_API_KEY: str = ""
 
+    # Helpdesk (grounded Gemini assistant)
+    GEMINI_API_KEY: str = ""  # Google AI Studio key — backend only, never exposed
+    GEMINI_MODEL: str = "gemini-3.5-flash"
+
     # App
     CORS_ORIGINS: str = "http://localhost:5173"
     ENVIRONMENT: str = "development"

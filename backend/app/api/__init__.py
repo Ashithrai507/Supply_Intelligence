@@ -10,6 +10,7 @@ from app.api import (
     demand,
     facilities,
     forecasts,
+    helpdesk,
     hospitals,
     inventory,
     medicines,
@@ -37,6 +38,7 @@ api_v1_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashb
 api_v1_router.include_router(redistribution.router, prefix="/redistribution", tags=["redistribution"])
 api_v1_router.include_router(scenarios.router, prefix="/scenarios", tags=["scenarios"])
 api_v1_router.include_router(assistant.router, prefix="/assistant", tags=["assistant"])
+api_v1_router.include_router(helpdesk.router, prefix="/helpdesk", tags=["helpdesk"])
 
 #: Core router mounted under root
 api_router = APIRouter()
