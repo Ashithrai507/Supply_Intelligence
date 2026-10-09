@@ -15,6 +15,10 @@ the role model per project.md §4:
 * ``FACILITY_MANAGER`` → reads (facility scoping enforced by RLS + services)
 * ``ANALYST``          → reads (network-wide analytics)
 
+Role + facility are read from ``app_metadata`` first, then fall back to
+``user_metadata`` (populated from the self-signup form via the client SDK,
+which cannot write ``app_metadata``), then to top-level claims.
+
 Usage on a route::
 
     @router.get("/x", dependencies=[Depends(require_read)])
@@ -132,8 +136,17 @@ def verify_token(token: str) -> dict:
 def user_from_claims(claims: dict) -> CurrentUser:
     """Build a :class:`CurrentUser` from verified JWT claims (401 on bad claims)."""
     app_metadata = claims.get("app_metadata") or {}
-    role = app_metadata.get("role") or claims.get("role")
-    facility_id = app_metadata.get("facility_id") or claims.get("facility_id")
+    user_metadata = claims.get("user_metadata") or {}
+    role = (
+        app_metadata.get("role")
+        or user_metadata.get("role")
+        or claims.get("role")
+    )
+    facility_id = (
+        app_metadata.get("facility_id")
+        or user_metadata.get("facility_id")
+        or claims.get("facility_id")
+    )
     if role not in ALL_ROLES:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

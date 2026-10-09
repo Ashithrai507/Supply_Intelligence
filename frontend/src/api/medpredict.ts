@@ -16,12 +16,13 @@
 
 import { getHospitals, type HospitalOption } from "./forecast";
 import { riskOf, type InventoryRow } from "./client";
+import { authHeaders } from "./authToken";
 
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, { signal });
+  const res = await fetch(`${BASE_URL}${path}`, { signal, headers: authHeaders() });
   if (!res.ok) {
     throw new Error(`GET ${path} failed: ${res.status}`);
   }

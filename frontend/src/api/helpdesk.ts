@@ -9,6 +9,8 @@
  * hospital's id here and never include secrets.
  */
 
+import { authHeaders } from "./authToken";
+
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
@@ -82,6 +84,7 @@ export function askHelpdesk(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders(),
       "X-Hospital-Id": hospitalId,
     },
     body: JSON.stringify({ question } satisfies HelpdeskRequest),
@@ -94,7 +97,7 @@ export function getHelpdeskCapabilities(
   signal?: AbortSignal,
 ): Promise<HelpdeskCapability[]> {
   return request<HelpdeskCapability[]>("/api/v1/helpdesk/capabilities", {
-    headers: { "X-Hospital-Id": hospitalId },
+    headers: { ...authHeaders(), "X-Hospital-Id": hospitalId },
     signal,
   });
 }
