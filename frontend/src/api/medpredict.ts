@@ -365,7 +365,7 @@ export function priorityFor(hospital: HospitalOption, risks: StockoutRiskItem[])
   const worstDays = worst?.days_until_stockout ?? 999;
 
   const stockout =
-    worstDays <= 3 ? 30 : worstDays <= 7 ? 22 : worstDays <= 14 ? 14 : atRisk.length > 0 ? 8 : 0;
+    worstDays >= 999 ? 0 : Math.max(0, Math.round((30 - worstDays * 6) * 10) / 10);
   const criticality = atRisk.reduce(
     (max, r) => Math.max(max, CRITICALITY_WEIGHT[r.criticality_level] ?? 4),
     0,
@@ -376,7 +376,9 @@ export function priorityFor(hospital: HospitalOption, risks: StockoutRiskItem[])
 
   const raw: PriorityBreakdown = { patientLoad, emergency, stockout, criticality, alternatives };
   const rawSum = patientLoad + emergency + stockout + criticality + alternatives;
-  const score = Math.min(100, rawSum);
+  // Normalize to 0–100 against the theoretical max (30+30+30+30+10) so
+  // hospitals actually rank instead of all saturating at the cap.
+  const score = Math.round((rawSum / 130) * 100);
   const level: PriorityRow["level"] = score >= 80 ? "Critical" : score >= 50 ? "High" : "Medium";
 
   const reason = worst
