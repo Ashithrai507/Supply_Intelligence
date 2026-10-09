@@ -25,11 +25,14 @@ import logging
 from collections.abc import Callable
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import get_db
+from app.models.entities import Hospital
 
 logger = logging.getLogger("app.security")
 
@@ -144,3 +147,59 @@ def require_roles(*allowed: str) -> Callable:
 #: ``dependencies=[Depends(require_admin)]`` on POSTs/runs.
 require_read = require_roles(*READ_ROLES)
 require_admin = require_roles(*WRITE_ROLES)
+
+
+class HelpdeskScope(BaseModel):
+    """Hospital scope for Helpdesk queries, resolved on the backend.
+
+    Never trusts the payload: derived from a valid Supabase JWT's
+    ``facility_id`` when present, otherwise from the ``X-Hospital-Id`` header.
+    The resolved facility must exist in the DB or the request is rejected.
+    """
+
+    hospital_id: str
+    hospital_name: str
+    role: str | None = None
+
+
+def get_helpdesk_scope(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    hospital_id: str | None = Header(default=None, alias="X-Hospital-Id"),
+    db: Session = Depends(get_db),
+) -> HelpdeskScope:
+    """Resolve the caller's hospital scope (JWT authoritative, else header).
+
+    Only ever scopes to ONE hospital — there is no network-wide path.
+    """
+    resolved_id: str | None = None
+    role: str | None = None
+
+    has_bearer = credentials is not None and bool(credentials.credentials)
+    if has_bearer:
+        user = user_from_claims(verify_token(credentials.credentials))
+        if not user.facility_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has no facility scope",
+            )
+        resolved_id, role = user.facility_id, user.role
+    elif hospital_id:
+        resolved_id = hospital_id.strip() or None
+
+    if not resolved_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Hospital scope required: valid Bearer JWT or X-Hospital-Id header",
+        )
+
+    hospital = db.query(Hospital).filter(Hospital.id == resolved_id).first()
+    if hospital is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unknown hospital scope: {resolved_id!r}",
+        )
+    return HelpdeskScope(
+        hospital_id=hospital.id,
+        hospital_name=hospital.name,
+        role=role,
+    )
