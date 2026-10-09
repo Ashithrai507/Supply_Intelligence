@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Eye,
@@ -8,8 +9,10 @@ import {
   Mail,
   Shield,
   ShieldCheck,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { SUPABASE_CONFIGURED } from "../api/supabase";
 
 export default function Login() {
   const { login } = useAuth();
@@ -126,19 +129,30 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Minimal Demo Credentials Hint */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-400 space-y-1">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-300">
-              <Shield className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Demo Credentials</span>
+          {SUPABASE_CONFIGURED ? (
+            <div className="pt-1 text-center">
+              <Link
+                to="/signup"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-300 hover:text-indigo-200 transition-colors"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                New here? Create an account
+              </Link>
             </div>
-            <p>
-              Email / Code: <code className="text-indigo-300 font-mono">hospital-a@medipulse.health</code> (or <code className="text-indigo-300 font-mono">H01</code>)
-            </p>
-            <p>
-              Password: <code className="text-indigo-300 font-mono">supplyPass2026!</code>
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-400 space-y-1">
+              <div className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Shield className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Demo Credentials</span>
+              </div>
+              <p>
+                Email / Code: <code className="text-indigo-300 font-mono">hospital-a@medipulse.health</code> (or <code className="text-indigo-300 font-mono">H01</code>)
+              </p>
+              <p>
+                Password: <code className="text-indigo-300 font-mono">supplyPass2026!</code>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Minimal Footer */}

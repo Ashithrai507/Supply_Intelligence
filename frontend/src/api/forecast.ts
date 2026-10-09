@@ -13,11 +13,16 @@
  * (v1 prefix where the plain-/api alias was never added; all open, all real.)
  */
 
+import { authHeaders } from "./authToken";
+
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, init);
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers: { ...authHeaders(), ...(init?.headers ?? {}) },
+  });
   if (!res.ok) {
     throw new Error(`${init?.method ?? "GET"} ${path} failed: ${res.status}`);
   }

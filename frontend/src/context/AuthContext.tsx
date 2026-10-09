@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { SUPABASE_CONFIGURED, supabase } from "../api/supabase";
+import { TOKEN_KEY } from "../api/authToken";
+
 export interface HospitalProfile {
   id: string; // real hospital_id from the dataset, e.g. "H01"
   name: string;
@@ -66,19 +69,63 @@ export const PRESET_HOSPITALS: HospitalProfile[] = [
   },
 ];
 
+export interface SignUpInput {
+  name: string;
+  email: string;
+  password: string;
+  facilityId: string;
+  role: string;
+}
+
+export interface SignUpResult {
+  error: string | null;
+  needsEmailConfirmation: boolean;
+}
+
 interface AuthContextType {
   user: HospitalProfile | null;
   token: string | null;
   login: (emailOrId: string, password?: string) => Promise<boolean>;
+  signUp: (input: SignUpInput) => Promise<SignUpResult>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "medipulse_auth_user";
-const TOKEN_KEY = "medipulse_auth_token";
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
+
+function fallbackFacilityFromQuery(query: string): string | null {
+  const normalized = query.toLowerCase();
+  const preset = PRESET_HOSPITALS.find((h) => h.email.toLowerCase() === normalized);
+  if (preset) return preset.id;
+  const match = normalized.match(/^h(\d{2})/);
+  if (match) return `H${match[1]}`;
+  return null;
+}
+
+function profileFromMeta(
+  meta: Record<string, unknown>,
+  email: string | undefined,
+  facilityId: string,
+): HospitalProfile {
+  const name = typeof meta.name === "string" ? meta.name : (email?.split("@")[0] ?? facilityId);
+  const role = typeof meta.role === "string" ? meta.role : "FACILITY_MANAGER";
+  const preset = PRESET_HOSPITALS.find((h) => h.id === facilityId);
+  return {
+    id: facilityId,
+    name: preset?.name ?? facilityId,
+    code: facilityId,
+    email: email ?? `${facilityId.toLowerCase()}@medipulse.health`,
+    role,
+    userName: name,
+    region: preset?.region ?? "Regional Network",
+    bedCapacity: preset?.bedCapacity ?? 250,
+    tier: preset?.tier ?? "General Hospital",
+    avatarColor: preset?.avatarColor ?? "from-blue-600 to-indigo-600",
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => {
@@ -101,6 +148,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
 
+  // Hydrate a persisted Supabase session on reload when no app token is stored.
+  useEffect(() => {
+    if (!SUPABASE_CONFIGURED || !supabase || localStorage.getItem(TOKEN_KEY)) {
+      return;
+    }
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active || !data.session) return;
+      const session = data.session;
+      const meta = (session.user?.user_metadata ?? {}) as Record<string, unknown>;
+      const facilityId =
+        typeof meta.facility_id === "string"
+          ? meta.facility_id
+          : (fallbackFacilityFromQuery(session.user?.email ?? "") ?? "H01");
+      setToken(session.access_token);
+      setUser({
+        ...profileFromMeta(meta, session.user?.email, facilityId),
+        token: session.access_token,
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
@@ -119,6 +191,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (emailOrId: string, password = "supplyPass2026!"): Promise<boolean> => {
     const query = emailOrId.trim();
+
+    if (SUPABASE_CONFIGURED && supabase) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: query,
+        password,
+      });
+      if (error || !data.session) return false;
+      const session = data.session;
+      const meta = (session.user?.user_metadata ?? {}) as Record<string, unknown>;
+      const facilityId =
+        typeof meta.facility_id === "string"
+          ? meta.facility_id
+          : (fallbackFacilityFromQuery(session.user?.email ?? "") ?? "H01");
+      setToken(session.access_token);
+      setUser({
+        ...profileFromMeta(meta, session.user?.email, facilityId),
+        token: session.access_token,
+      });
+      return true;
+    }
 
     try {
       const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
@@ -171,7 +263,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const logout = () => {
+  const signUp = async (input: SignUpInput): Promise<SignUpResult> => {
+    if (!SUPABASE_CONFIGURED || !supabase) {
+      return {
+        error: "Supabase Auth is not configured on this deployment.",
+        needsEmailConfirmation: false,
+      };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        data: {
+          facility_id: input.facilityId,
+          role: input.role,
+          name: input.name,
+        },
+      },
+    });
+
+    if (error) {
+      return { error: error.message, needsEmailConfirmation: false };
+    }
+
+    // Email confirmation enabled → user must verify before first sign-in.
+    if (!data.session) {
+      return { error: null, needsEmailConfirmation: true };
+    }
+
+    const meta = (data.user?.user_metadata ?? {}) as Record<string, unknown>;
+    setToken(data.session.access_token);
+    setUser({
+      ...profileFromMeta(meta, data.user?.email, input.facilityId),
+      token: data.session.access_token,
+    });
+    return { error: null, needsEmailConfirmation: false };
+  };
+
+  const logout = async () => {
+    if (SUPABASE_CONFIGURED && supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setToken(null);
     localStorage.removeItem(STORAGE_KEY);
@@ -179,7 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );

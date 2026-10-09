@@ -49,6 +49,63 @@ def auth_headers(role: str, **kwargs) -> dict:
     return {"Authorization": f"Bearer {mint(role, **kwargs)}"}
 
 
+def mint_metadata(
+    app_metadata: dict | None = None,
+    user_metadata: dict | None = None,
+) -> str:
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "sub": str(uuid.uuid4()),
+            "email": "self-signed@demo.local",
+            "aud": "authenticated",
+            "iat": now,
+            "exp": now + 3600,
+            **({"app_metadata": app_metadata} if app_metadata else {}),
+            **({"user_metadata": user_metadata} if user_metadata else {}),
+        },
+        TEST_SECRET,
+        algorithm="HS256",
+    )
+
+
+def test_user_metadata_used_when_app_metadata_absent() -> None:
+    """Client SDK can't write app_metadata; self-signup lands in user_metadata."""
+    token = mint_metadata(user_metadata={"role": "ANALYST", "facility_id": "H02"})
+    resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["role"] == "ANALYST"
+    assert body["facility_id"] == "H02"
+
+
+def test_user_metadata_scope_drives_helpdesk() -> None:
+    token = mint_metadata(user_metadata={"role": "FACILITY_MANAGER", "facility_id": "H01"})
+    resp = client.get(
+        "/api/v1/helpdesk/capabilities",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+
+
+def test_app_metadata_takes_precedence_over_user_metadata() -> None:
+    token = mint_metadata(
+        app_metadata={"role": "ADMIN", "facility_id": "H01"},
+        user_metadata={"role": "ANALYST", "facility_id": "H02"},
+    )
+    resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["role"] == "ADMIN"
+    assert body["facility_id"] == "H01"
+
+
+def test_user_metadata_unknown_role_is_401() -> None:
+    token = mint_metadata(user_metadata={"role": "SUPERUSER"})
+    resp = client.get("/api/state", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+
+
 def test_health_is_public() -> None:
     assert client.get("/health").status_code == 200
 

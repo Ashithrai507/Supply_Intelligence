@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   HeartPulse,
   Menu,
@@ -12,6 +12,7 @@ import Forecast from "./pages/Forecast";
 import Helpdesk from "./pages/Helpdesk";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import Priority from "./pages/Priority";
 import Redistribution from "./pages/Redistribution";
 import Requests from "./pages/Requests";
@@ -41,7 +42,7 @@ function AuthenticatedApp() {
   const location = useLocation();
 
   if (!user) {
-    return <Login />;
+    return location.pathname === "/signup" ? <SignUp /> : <Login />;
   }
 
   return (
@@ -139,6 +140,8 @@ function AuthenticatedApp() {
           <Route path="/priority" element={<Priority />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/helpdesk" element={<Helpdesk />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/signup" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
