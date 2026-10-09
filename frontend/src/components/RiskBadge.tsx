@@ -13,22 +13,22 @@ const STYLES: Record<
   Critical: {
     dot: "bg-rose-600",
     ping: "bg-rose-400",
-    classes: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm shadow-rose-100/50 dark:text-rose-300 dark:border-rose-800",
+    classes: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm shadow-rose-100/50",
   },
   High: {
     dot: "bg-amber-500",
     ping: "bg-amber-400",
-    classes: "bg-amber-50 text-amber-800 border-amber-200 shadow-sm shadow-amber-100/50 dark:text-amber-200 dark:border-amber-800",
+    classes: "bg-amber-50 text-amber-800 border-amber-200 shadow-sm shadow-amber-100/50",
   },
   Medium: {
     dot: "bg-yellow-500",
     ping: "bg-yellow-400",
-    classes: "bg-yellow-50 text-yellow-800 border-yellow-200 dark:text-yellow-200 dark:border-yellow-800",
+    classes: "bg-yellow-50 text-yellow-800 border-yellow-200",
   },
   Safe: {
     dot: "bg-emerald-600",
     ping: "bg-emerald-400",
-    classes: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:text-emerald-300 dark:border-emerald-800",
+    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
 };
 

@@ -59,7 +59,7 @@ export default function Login() {
               MediPulse
             </span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-slate-400">
             Sign in to access your hospital&apos;s inventory, forecasts, and redistribution pipeline
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function Login() {
                 Institutional Email or Hospital Code
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
                   placeholder="e.g. hospital-a@medipulse.health or H01"
@@ -96,7 +96,7 @@ export default function Login() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
@@ -109,7 +109,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 dark:text-slate-400"
+                  className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -127,7 +127,7 @@ export default function Login() {
           </form>
 
           {/* Minimal Demo Credentials Hint */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-400 space-y-1 dark:text-slate-500">
+          <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-400 space-y-1">
             <div className="flex items-center gap-1.5 font-semibold text-slate-300">
               <Shield className="h-3.5 w-3.5 text-indigo-400" />
               <span>Demo Credentials</span>
@@ -142,7 +142,7 @@ export default function Login() {
         </div>
 
         {/* Minimal Footer */}
-        <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 dark:text-slate-400">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
           <span className="flex items-center gap-1">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             JWT &amp; RBAC Secured

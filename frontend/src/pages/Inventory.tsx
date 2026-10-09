@@ -210,8 +210,8 @@ export default function Inventory() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400">
-          <RefreshCw className="h-8 w-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+        <div className="flex flex-col items-center gap-3 text-slate-500">
+          <RefreshCw className="h-8 w-8 animate-spin text-indigo-600" />
           <p className="text-sm font-semibold">Loading real-time inventory records…</p>
         </div>
       </div>
@@ -220,12 +220,12 @@ export default function Inventory() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm dark:border-rose-800">
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
         <div className="flex items-center gap-3">
           <AlertCircle className="h-6 w-6 text-rose-600" />
           <div>
             <h3 className="font-bold">Could not load live inventory</h3>
-            <p className="text-xs text-rose-700 mt-1 dark:text-rose-300">{error} — verify the API at http://localhost:8000 is running.</p>
+            <p className="text-xs text-rose-700 mt-1">{error} — verify the API at http://localhost:8000 is running.</p>
           </div>
         </div>
       </div>
@@ -236,7 +236,7 @@ export default function Inventory() {
     <div className="space-y-5">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-white px-4 py-3 text-xs font-semibold text-white dark:text-slate-900 shadow-xl animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-semibold text-white shadow-xl animate-bounce">
           <CheckCircle className="h-4 w-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -246,11 +246,11 @@ export default function Inventory() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {currentHospital} — Formulary Stock Telemetry
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 dark:text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Real-time formulary stock levels, consumption run-rates, and expiration countdowns for {currentHospital}.
           </p>
         </div>
@@ -258,9 +258,9 @@ export default function Inventory() {
         <div className="flex items-center gap-2">
           <button
             onClick={exportCSV}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-95 transition-all dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
           >
-            <Download className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+            <Download className="h-3.5 w-3.5 text-slate-500" />
             <span>Export CSV</span>
           </button>
         </div>
@@ -278,7 +278,7 @@ export default function Inventory() {
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
             risk === "All" && !criticalOnly && !expiryRiskOnly && stockStatus === "All"
               ? "bg-indigo-600 text-white shadow-sm"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
           All Items ({rows.length})
@@ -293,7 +293,7 @@ export default function Inventory() {
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
             risk === "Critical"
               ? "bg-rose-600 text-white shadow-sm shadow-rose-600/30"
-              : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 dark:text-rose-300 dark:border-rose-800"
+              : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
           }`}
         >
           🚨 Critical Shortages ({criticalCount})
@@ -308,7 +308,7 @@ export default function Inventory() {
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
             risk === "High"
               ? "bg-amber-600 text-white shadow-sm shadow-amber-600/30"
-              : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 dark:text-amber-200 dark:border-amber-800"
+              : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
           }`}
         >
           ⚠️ High Risk ({highRiskCount})
@@ -322,7 +322,7 @@ export default function Inventory() {
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
             expiryRiskOnly
               ? "bg-orange-600 text-white shadow-sm shadow-orange-600/30"
-              : "bg-orange-50 text-orange-800 border border-orange-200 hover:bg-orange-100 dark:text-orange-200 dark:border-orange-800"
+              : "bg-orange-50 text-orange-800 border border-orange-200 hover:bg-orange-100"
           }`}
         >
           ⏳ Expiring Soon ({expiringCount})
@@ -335,8 +335,8 @@ export default function Inventory() {
           }}
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
             stockStatus === "Out of stock"
-              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
-              : "bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              ? "bg-slate-900 text-white shadow-sm"
+              : "bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200"
           }`}
         >
           📦 Zero Stock ({stockoutCount})
@@ -344,22 +344,22 @@ export default function Inventory() {
       </div>
 
       {/* Main Interactive Filter Bar */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm space-y-3 dark:bg-slate-900 dark:border-slate-800">
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Instant Search Bar */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Instant search by medicine, hospital, or supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-8 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all dark:bg-slate-900/70 dark:text-slate-200 dark:border-slate-800"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-8 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:text-slate-500"
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -368,13 +368,13 @@ export default function Inventory() {
 
           {/* Active record counter & reset */}
           <div className="flex items-center justify-between lg:justify-end gap-3 text-xs">
-            <span className="font-medium text-slate-500 dark:text-slate-400">
-              Showing <span className="font-bold text-slate-900 dark:text-slate-100">{sortedRows.length}</span> of {rows.length} records
+            <span className="font-medium text-slate-500">
+              Showing <span className="font-bold text-slate-900">{sortedRows.length}</span> of {rows.length} records
             </span>
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white"
+                className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
               >
                 <X className="h-3 w-3" />
                 <span>Reset</span>
@@ -384,11 +384,11 @@ export default function Inventory() {
         </div>
 
         {/* Multi-dropdown filter row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2 border-t border-slate-100 text-xs dark:border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2 border-t border-slate-100 text-xs">
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1 dark:text-slate-400">Facility Scope</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Facility Scope</label>
             <div
-              className="w-full rounded-lg border border-indigo-200 bg-indigo-50/70 px-2 py-1.5 font-bold text-indigo-900 truncate text-xs dark:border-indigo-800"
+              className="w-full rounded-lg border border-indigo-200 bg-indigo-50/70 px-2 py-1.5 font-bold text-indigo-900 truncate text-xs"
               title={currentHospital}
             >
               {currentHospital}
@@ -396,9 +396,9 @@ export default function Inventory() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1 dark:text-slate-400">Medicine</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Medicine</label>
             <select
-              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors dark:bg-slate-900/70 dark:text-slate-200 dark:border-slate-800"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors"
               value={medicine}
               onChange={(e) => setMedicine(e.target.value)}
             >
@@ -409,9 +409,9 @@ export default function Inventory() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1 dark:text-slate-400">Risk Band</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Risk Band</label>
             <select
-              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors dark:bg-slate-900/70 dark:text-slate-200 dark:border-slate-800"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors"
               value={risk}
               onChange={(e) => setRisk(e.target.value as "All" | RiskLevel)}
             >
@@ -422,9 +422,9 @@ export default function Inventory() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1 dark:text-slate-400">Stock Status</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Stock Status</label>
             <select
-              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors dark:bg-slate-900/70 dark:text-slate-200 dark:border-slate-800"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors"
               value={stockStatus}
               onChange={(e) => setStockStatus(e.target.value as (typeof STOCK_OPTIONS)[number])}
             >
@@ -435,33 +435,33 @@ export default function Inventory() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1 dark:text-slate-400">Days Left &lt;</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Days Left &lt;</label>
             <input
               type="number"
               min={0}
               placeholder="e.g. 7"
               value={maxDays}
               onChange={(e) => setMaxDays(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors dark:bg-slate-900/70 dark:text-slate-200 dark:border-slate-800"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1.5 font-medium text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition-colors"
             />
           </div>
 
           <div className="flex flex-col justify-end gap-1 pb-1">
-            <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 cursor-pointer dark:text-slate-300">
+            <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={criticalOnly}
                 onChange={(e) => setCriticalOnly(e.target.checked)}
-                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:text-indigo-400"
+                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span>Critical Only</span>
             </label>
-            <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 cursor-pointer dark:text-slate-300">
+            <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={expiryRiskOnly}
                 onChange={(e) => setExpiryRiskOnly(e.target.checked)}
-                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:text-indigo-400"
+                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span>Expires ≤ 14d</span>
             </label>
@@ -471,10 +471,10 @@ export default function Inventory() {
 
       {/* Reactive Sortable Table with Expandable Rows */}
       {sortedRows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:bg-slate-900">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
           <Boxes className="mx-auto h-10 w-10 text-slate-300" />
-          <h3 className="mt-3 text-sm font-bold text-slate-800 dark:text-slate-200">No inventory matches your filters</h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Try loosening your search terms or risk band selection.</p>
+          <h3 className="mt-3 text-sm font-bold text-slate-800">No inventory matches your filters</h3>
+          <p className="mt-1 text-xs text-slate-500">Try loosening your search terms or risk band selection.</p>
           <button
             onClick={resetFilters}
             className="mt-4 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors"
@@ -483,61 +483,61 @@ export default function Inventory() {
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:bg-slate-900 dark:border-slate-800">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100 text-xs dark:divide-slate-800">
-              <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-900/80 dark:text-slate-400">
+            <table className="min-w-full divide-y divide-slate-100 text-xs">
+              <thead className="bg-slate-50/80 text-slate-600">
                 <tr>
                   <th
                     onClick={() => handleSort("hospital")}
-                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors dark:hover:text-white"
+                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Hospital</span>
-                      <ArrowUpDown className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <ArrowUpDown className="h-3 w-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("medicine")}
-                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors dark:hover:text-white"
+                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Medicine</span>
-                      <ArrowUpDown className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <ArrowUpDown className="h-3 w-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("current_quantity")}
-                    className="cursor-pointer px-4 py-3 text-right font-bold hover:text-slate-900 transition-colors dark:hover:text-white"
+                    className="cursor-pointer px-4 py-3 text-right font-bold hover:text-slate-900 transition-colors"
                   >
                     <div className="flex items-center justify-end gap-1.5">
                       <span>Stock Units</span>
-                      <ArrowUpDown className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <ArrowUpDown className="h-3 w-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("avg_daily_usage")}
-                    className="cursor-pointer px-4 py-3 text-right font-bold hover:text-slate-900 transition-colors dark:hover:text-white"
+                    className="cursor-pointer px-4 py-3 text-right font-bold hover:text-slate-900 transition-colors"
                   >
                     <div className="flex items-center justify-end gap-1.5">
                       <span>Daily Burn</span>
-                      <ArrowUpDown className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <ArrowUpDown className="h-3 w-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("days_left")}
-                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors dark:hover:text-white"
+                    className="cursor-pointer px-4 py-3 text-left font-bold hover:text-slate-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Days of Supply</span>
-                      <ArrowUpDown className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <ArrowUpDown className="h-3 w-3 text-slate-400" />
                     </div>
                   </th>
                   <th className="px-4 py-3 text-left font-bold">Risk Status</th>
                   <th className="px-3 py-3 text-center font-bold">Drilldown</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {sortedRows.map((r) => {
                   const rowId = `${r.hospital_id}-${r.medicine_id}`;
                   const isExpanded = expandedRowId === rowId;
@@ -560,11 +560,11 @@ export default function Inventory() {
                           : "hover:bg-slate-50/80"
                       }`}
                     >
-                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
+                      <td className="px-4 py-3 font-medium text-slate-800">
                         {r.hospital}
                       </td>
 
-                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">
+                      <td className="px-4 py-3 font-semibold text-slate-900">
                         <div className="flex items-center gap-1.5">
                           <span>{r.medicine}</span>
                           {isCritical(r) && (
@@ -574,17 +574,17 @@ export default function Inventory() {
                           )}
                         </div>
                         {dte <= 14 && (
-                          <span className="text-[10px] text-amber-700 font-medium dark:text-amber-300">
+                          <span className="text-[10px] text-amber-700 font-medium">
                             Expires in {dte}d
                           </span>
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
                         {r.current_quantity.toLocaleString()}
                       </td>
 
-                      <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-400">
+                      <td className="px-4 py-3 text-right font-mono text-slate-600">
                         {r.avg_daily_usage.toFixed(1)} /d
                       </td>
 
@@ -594,17 +594,17 @@ export default function Inventory() {
                             <span
                               className={
                                 isShortageCritical
-                                  ? "text-rose-700 dark:text-rose-300"
+                                  ? "text-rose-700"
                                   : level === "High"
-                                  ? "text-amber-700 dark:text-amber-300"
-                                  : "text-slate-800 dark:text-slate-200"
+                                  ? "text-amber-700"
+                                  : "text-slate-800"
                               }
                             >
                               {formatDaysLeft(r.days_left)}
                             </span>
                           </div>
                           {/* Visual progress bar */}
-                          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-slate-200">
                             <div
                               className={`h-full rounded-full transition-all duration-300 ${
                                 isShortageCritical
@@ -628,7 +628,7 @@ export default function Inventory() {
                       <td className="px-3 py-3 text-center">
                         <button
                           onClick={() => setExpandedRowId(isExpanded ? null : rowId)}
-                          className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors dark:text-slate-500"
+                          className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
                           title="Click to view full supply chain telemetry"
                         >
                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -652,12 +652,12 @@ export default function Inventory() {
 
                 return (
                   <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-2">
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
                           Supply Chain Diagnostic
                         </span>
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                        <h4 className="text-sm font-bold text-slate-900">
                           {r.medicine} @ {r.hospital}
                         </h4>
                       </div>
@@ -671,7 +671,7 @@ export default function Inventory() {
                         </Link>
                         <button
                           onClick={() => showToast(`Emergency procurement alert logged for ${r.supplier}.`)}
-                          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                         >
                           Log Supplier Order
                         </button>
@@ -679,40 +679,40 @@ export default function Inventory() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:bg-slate-900 dark:border-slate-800">
-                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Contracted Supplier</span>
-                        <p className="font-bold text-slate-900 mt-0.5 dark:text-slate-100">{r.supplier}</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Lead time: <span className="font-semibold text-slate-700 dark:text-slate-300">{r.supplier_lead_time_days} days</span>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                        <span className="text-[11px] font-semibold text-slate-500">Contracted Supplier</span>
+                        <p className="font-bold text-slate-900 mt-0.5">{r.supplier}</p>
+                        <p className="text-[11px] text-slate-500">
+                          Lead time: <span className="font-semibold text-slate-700">{r.supplier_lead_time_days} days</span>
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:bg-slate-900 dark:border-slate-800">
-                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Procurement Feasibility</span>
-                        <p className={`font-bold mt-0.5 ${leadCovered ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                        <span className="text-[11px] font-semibold text-slate-500">Procurement Feasibility</span>
+                        <p className={`font-bold mt-0.5 ${leadCovered ? "text-emerald-700" : "text-rose-700"}`}>
                           {leadCovered ? "Safe (Lead time covered)" : "Breached (Stockout before delivery)"}
                         </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <p className="text-[11px] text-slate-500">
                           {leadCovered
                             ? "Standard reorder will arrive in time."
                             : "Supplier cannot replenish in time. Immediate redistribution required."}
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:bg-slate-900 dark:border-slate-800">
-                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Lot Expiry Date</span>
-                        <p className="font-bold text-slate-900 mt-0.5 dark:text-slate-100">{r.expiry_date}</p>
-                        <p className={`text-[11px] font-semibold ${dte <= 14 ? "text-amber-700 dark:text-amber-300" : "text-slate-500 dark:text-slate-400"}`}>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                        <span className="text-[11px] font-semibold text-slate-500">Lot Expiry Date</span>
+                        <p className="font-bold text-slate-900 mt-0.5">{r.expiry_date}</p>
+                        <p className={`text-[11px] font-semibold ${dte <= 14 ? "text-amber-700" : "text-slate-500"}`}>
                           {dte > 0 ? `${dte} days remaining` : "Expired batch"}
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:bg-slate-900 dark:border-slate-800">
-                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Clinical Alternatives</span>
-                        <p className="font-bold text-slate-900 mt-0.5 dark:text-slate-100">
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                        <span className="text-[11px] font-semibold text-slate-500">Clinical Alternatives</span>
+                        <p className="font-bold text-slate-900 mt-0.5">
                           {r.alternative_available ? "Alternative stocked" : "No alternative available"}
                         </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <p className="text-[11px] text-slate-500">
                           {r.alternative_available
                             ? "Physicians can substitute peer SKU if stock drops."
                             : "Critical care risk if stock reaches zero."}
