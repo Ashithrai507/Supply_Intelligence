@@ -1,0 +1,42 @@
+{
+  "model": "LightGBM",
+  "model_version": "1.0.0",
+  "trained_at": "2026-10-08T17:59:38.304108",
+  "train_rows": 94000,
+  "test_rows": 20400,
+  "features": [
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_7",
+    "lag_14",
+    "lag_28",
+    "rolling_mean_7",
+    "rolling_std_7",
+    "rolling_mean_14",
+    "rolling_std_14",
+    "rolling_mean_28",
+    "rolling_std_28",
+    "day_of_week",
+    "day_of_month",
+    "month",
+    "week_of_year",
+    "is_weekend",
+    "patient_load",
+    "emergency_cases",
+    "outbreak_signal",
+    "hospital_id",
+    "medicine_id"
+  ],
+  "lightgbm": {
+    "mae": 3.0267,
+    "rmse": 5.439,
+    "wape": 0.067
+  },
+  "baseline_7day_ma": {
+    "mae": 3.1672,
+    "rmse": 5.3157,
+    "wape": 0.0701
+  },
+  "evaluation_split": "15% chronological out-of-time test set"
+}

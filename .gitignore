@@ -25,9 +25,11 @@ data/*.db
 # Archives
 *.zip
 
-# Generated data & model artifacts
+# Generated data
 data/generated/
-backend/ml/artifacts/
+
+# Trained model artifacts (demand_lightgbm.txt, metrics.json, ...) ARE tracked
+# so Railway deploys can load the model without retraining on first request.
 
 # Supabase local state
 supabase/.temp/
