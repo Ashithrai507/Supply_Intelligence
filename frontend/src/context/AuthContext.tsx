@@ -11,10 +11,10 @@ export interface HospitalProfile {
   bedCapacity: number;
   tier: string;
   avatarColor: string;
+  token?: string;
 }
 
-// Mirrors the seeded `data/synthetic/hospitals.csv` (H01–H04) so every page
-// scopes to a real facility in the dataset.
+// Mirrors the seeded hospitals in dataset (H01–H04)
 export const PRESET_HOSPITALS: HospitalProfile[] = [
   {
     id: "H01",
@@ -68,32 +68,37 @@ export const PRESET_HOSPITALS: HospitalProfile[] = [
 
 interface AuthContextType {
   user: HospitalProfile | null;
-  login: (emailOrId: string, password?: string) => boolean;
+  token: string | null;
+  login: (emailOrId: string, password?: string) => Promise<boolean>;
   logout: () => void;
-  switchHospital: (hospitalId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "medipulse_auth_user";
+const TOKEN_KEY = "medipulse_auth_token";
+const BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem(TOKEN_KEY);
+  });
+
   const [user, setUser] = useState<HospitalProfile | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as HospitalProfile;
-        // Ignore profiles persisted before the dataset migration (e.g. "h1").
         const match = PRESET_HOSPITALS.find((h) => h.id === parsed.id);
         if (match) {
-          return match;
+          return { ...match, ...parsed };
         }
       }
     } catch {
       // Fallback
     }
-    // Default logged in as Hospital A for instant seamless preview
-    return PRESET_HOSPITALS[0];
+    return null;
   });
 
   useEffect(() => {
@@ -104,39 +109,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const login = (emailOrId: string, _password?: string): boolean => {
-    const query = emailOrId.trim().toLowerCase();
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }, [token]);
+
+  const login = async (emailOrId: string, password = "supplyPass2026!"): Promise<boolean> => {
+    const query = emailOrId.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: query, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const jwtToken = data.access_token;
+        setToken(jwtToken);
+
+        const facilityId = data.user.facility_id;
+        const match = PRESET_HOSPITALS.find((h) => h.id === facilityId) || {
+          id: facilityId || "H01",
+          name: data.user.hospital_name || "Hospital A",
+          code: facilityId || "H01",
+          email: data.user.email,
+          role: data.user.role,
+          userName: data.user.name,
+          region: data.user.city || "Regional Network",
+          bedCapacity: data.user.bed_capacity || 250,
+          tier: "General Hospital",
+          avatarColor: "from-blue-600 to-indigo-600",
+        };
+
+        setUser({ ...match, token: jwtToken });
+        return true;
+      }
+    } catch {
+      // Network failure
+    }
+
+    // Local credential check (offline fallback for demo)
+    const normalized = query.toLowerCase();
     const found = PRESET_HOSPITALS.find(
       (h) =>
-        h.id.toLowerCase() === query ||
-        h.email.toLowerCase() === query ||
-        h.name.toLowerCase().includes(query) ||
-        h.code.toLowerCase() === query,
+        h.id.toLowerCase() === normalized ||
+        h.email.toLowerCase() === normalized ||
+        h.name.toLowerCase() === normalized ||
+        h.code.toLowerCase() === normalized,
     );
 
-    if (found) {
+    if (found && (password === "supplyPass2026!" || password === "password" || password === "hospital123!")) {
       setUser(found);
       return true;
     }
 
-    // Default to the first hospital if unknown query entered
-    setUser(PRESET_HOSPITALS[0]);
-    return true;
-  };
-
-  const switchHospital = (hospitalId: string) => {
-    const found = PRESET_HOSPITALS.find((h) => h.id === hospitalId);
-    if (found) {
-      setUser(found);
-    }
+    return false;
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, switchHospital }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

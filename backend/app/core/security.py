@@ -64,6 +64,36 @@ def jwt_secret_configured() -> bool:
     return bool(settings.SUPABASE_JWT_SECRET)
 
 
+def create_access_token(
+    user_id: str,
+    email: str,
+    role: str,
+    facility_id: str | None = None,
+    expires_in_seconds: int = 86400,
+) -> str:
+    """Mint a Supabase-compatible JWT token signed with SUPABASE_JWT_SECRET."""
+    secret = settings.SUPABASE_JWT_SECRET
+    if not secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SUPABASE_JWT_SECRET is not configured on the server",
+        )
+    import time
+    now = int(time.time())
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "aud": "authenticated",
+        "iat": now,
+        "exp": now + expires_in_seconds,
+        "app_metadata": {
+            "role": role,
+            "facility_id": facility_id,
+        },
+    }
+    return jwt.encode(payload, secret, algorithm="HS256")
+
+
 def verify_token(token: str) -> dict:
     """Verify a Supabase-issued JWT and return its claims.
 
