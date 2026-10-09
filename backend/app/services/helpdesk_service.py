@@ -1,9 +1,9 @@
-"""MedPredict Helpdesk service — grounded Gemini assistant (spec 2026-10-09).
+"""MedPredict Helpdesk service — grounded Groq assistant (spec 2026-10-09).
 
-Flow: request → Gemini selects ONE approved tool → backend executes a validated
+Flow: request → Groq selects ONE approved tool → backend executes a validated
 handler against the real DB/services (scoped to the caller's hospital, never
 the model's choice of hospital) → the sanitized, verified result is returned to
-Gemini → Gemini writes only ``answer`` + ``suggested_questions`` JSON → the
+Groq → Groq writes only ``answer`` + ``suggested_questions`` JSON → the
 backend validates it with Pydantic and attaches the evidence.
 
 Enforcement lives HERE in code, not just in the prompt: only these tool names
@@ -17,10 +17,9 @@ import logging
 import re
 from typing import Any
 
-from google.genai import types
 from sqlalchemy.orm import Session
 
-from app.core import gemini_client as gc
+from app.core import groq_client as gc
 from app.core.config import settings
 from app.core.security import HelpdeskScope
 from app.models.entities import Medicine
@@ -37,11 +36,11 @@ logger = logging.getLogger("app.helpdesk")
 
 
 class HelpdeskUnavailableError(Exception):
-    """Gemini is unavailable/misconfigured — surface a clean 503."""
+    """Groq is unavailable/misconfigured — surface a clean 503."""
 
 
 class HelpdeskBadResponseError(Exception):
-    """Gemini produced a malformed answer — never fall back to fabricated text."""
+    """Assistant produced a malformed answer — never fall back to fabricated text."""
 
 
 class ToolError(Exception):
@@ -194,12 +193,8 @@ TOOL_SPECS: list[dict[str, Any]] = [
     },
 ]
 
-TOOLS: list[types.Tool] = [
-    types.Tool(
-        function_declarations=[
-            gc.build_function_declaration(spec["name"], spec["description"], spec["parameters"])
-        ]
-    )
+TOOLS: list[dict[str, Any]] = [
+    gc.build_function_declaration(spec["name"], spec["description"], spec["parameters"])
     for spec in TOOL_SPECS
 ]
 
@@ -447,7 +442,7 @@ def _dispatch(db: Session, scope: HelpdeskScope, name: str, args: dict) -> dict:
 
 def _parse_answer(text: str | None) -> dict:
     if not text or not text.strip():
-        raise HelpdeskBadResponseError("Gemini returned no answer text.")
+        raise HelpdeskBadResponseError("Assistant returned no answer text.")
     raw = text.strip()
     if raw.startswith("```"):
         lines = raw.splitlines()
@@ -455,18 +450,18 @@ def _parse_answer(text: str | None) -> dict:
     start = raw.find("{")
     end = raw.rfind("}")
     if start == -1 or end == -1:
-        raise HelpdeskBadResponseError("Gemini did not return a JSON answer.")
+        raise HelpdeskBadResponseError("Assistant did not return a JSON answer.")
     import json
 
     try:
         payload = json.loads(raw[start : end + 1])
     except json.JSONDecodeError as exc:
-        raise HelpdeskBadResponseError("Gemini answer JSON was malformed.") from exc
+        raise HelpdeskBadResponseError("Assistant answer JSON was malformed.") from exc
     if not isinstance(payload, dict):
-        raise HelpdeskBadResponseError("Gemini answer was not an object.")
+        raise HelpdeskBadResponseError("Assistant answer was not an object.")
     answer = payload.get("answer")
     if not isinstance(answer, str) or not answer.strip():
-        raise HelpdeskBadResponseError("Gemini answer contained no text.")
+        raise HelpdeskBadResponseError("Assistant answer contained no text.")
     questions = [q for q in payload.get("suggested_questions") or [] if isinstance(q, str)]
     return {"answer": answer, "suggested_questions": questions[:4]}
 
@@ -491,13 +486,13 @@ def answer_question(db: Session, scope: HelpdeskScope, request: HelpdeskRequest)
 
         final_text, tool_name, result = gc.run_grounded_query(
             client,
-            settings.GEMINI_MODEL,
+            settings.GROQ_MODEL,
             SYSTEM_INSTRUCTION,
             request.question,
             TOOLS,
             handler,
         )
-    except gc.GeminiUnavailableError as exc:
+    except gc.GroqUnavailableError as exc:
         raise HelpdeskUnavailableError(str(exc)) from exc
     data_as_of = str(inventory_service.get_current_operational_date())
 

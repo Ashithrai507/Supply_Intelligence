@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     # AI copilot (built last — issue #17)
     LLM_API_KEY: str = ""
 
-    # Helpdesk (grounded Gemini assistant)
-    GEMINI_API_KEY: str = ""  # Google AI Studio key — backend only, never exposed
-    GEMINI_MODEL: str = "gemini-3.5-flash"
+    # Helpdesk (grounded Groq assistant)
+    GROQ_API_KEY: str = ""  # Groq console key — backend only, never exposed
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     # App
     CORS_ORIGINS: str = "http://localhost:5173"

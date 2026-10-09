@@ -1,11 +1,11 @@
-"""Tests for the MedPredict Helpdesk (grounded Gemini assistant).
+"""Tests for the MedPredict Helpdesk (grounded Groq assistant).
 
 Layers under test:
   1. Tool layer — every handler runs against the real seeded DB and service
      layer, scoped to ``HelpdeskScope`` (hospital can never be spoofed).
   2. Answer assembly — numerical-claim grounding guard, JSON parsing.
   3. API layer — scope resolution (header + JWT authority), 401/503/502 paths,
-     capabilities endpoint; Gemini is always mocked.
+     capabilities endpoint; Groq is always mocked.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core import gemini_client
+from app.core import groq_client
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.security import HelpdeskScope
@@ -149,7 +149,7 @@ def test_unverified_numbers_guard():
 
 
 def test_answer_question_marks_fabricated_number(monkeypatch, db):
-    monkeypatch.setattr(gemini_client, "build_client", lambda: object())
+    monkeypatch.setattr(groq_client, "build_client", lambda: object())
     real_dispatch = _dispatch
 
     def fake_loop(client, model, system, question, tools, handler):
@@ -160,7 +160,7 @@ def test_answer_question_marks_fabricated_number(monkeypatch, db):
             result,
         )
 
-    monkeypatch.setattr(gemini_client, "run_grounded_query", fake_loop)
+    monkeypatch.setattr(groq_client, "run_grounded_query", fake_loop)
     from app.schemas.helpdesk import HelpdeskRequest
 
     response = answer_question(db, H01, HelpdeskRequest(question="any stock-out?"))
@@ -170,16 +170,16 @@ def test_answer_question_marks_fabricated_number(monkeypatch, db):
 
 
 # ---------------------------------------------------------------------------
-# API layer (Gemini mocked)
+# API layer (Groq mocked)
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
-def fake_gemini(monkeypatch):
+def fake_groq(monkeypatch):
     """Routes answer_question through the real handlers with a canned text reply."""
     sentinel = object()
 
     def _install(final_text: str, tool_name: str | None):
-        monkeypatch.setattr(gemini_client, "build_client", lambda: sentinel)
+        monkeypatch.setattr(groq_client, "build_client", lambda: sentinel)
 
         def fake_loop(client, model, system, question, tools, handler):
             result = None
@@ -187,7 +187,7 @@ def fake_gemini(monkeypatch):
                 result = handler(tool_name, {})
             return final_text, tool_name, result
 
-        monkeypatch.setattr(gemini_client, "run_grounded_query", fake_loop)
+        monkeypatch.setattr(groq_client, "run_grounded_query", fake_loop)
 
     return _install
 
@@ -205,8 +205,8 @@ def test_query_rejects_unknown_hospital(client: TestClient):
     assert r.status_code == 401
 
 
-def test_query_returns_grounded_answer(client: TestClient, fake_gemini):
-    fake_gemini(
+def test_query_returns_grounded_answer(client: TestClient, fake_groq):
+    fake_groq(
         '{"answer": "Three medicines are flagged for stock-out risk.", "suggested_questions": ["Which one first?"]}',
         "get_stockout_risks",
     )
@@ -224,8 +224,8 @@ def test_query_returns_grounded_answer(client: TestClient, fake_gemini):
     assert body["suggested_questions"] == ["Which one first?"]
 
 
-def test_query_no_tool_maps_to_limitation(client: TestClient, fake_gemini):
-    fake_gemini('{"answer": "I can only help with MedPredict data.", "suggested_questions": []}', None)
+def test_query_no_tool_maps_to_limitation(client: TestClient, fake_groq):
+    fake_groq('{"answer": "I can only help with MedPredict data.", "suggested_questions": []}', None)
     r = client.post(
         "/api/v1/helpdesk/query",
         json={"question": "What is the weather?"},
@@ -235,13 +235,13 @@ def test_query_no_tool_maps_to_limitation(client: TestClient, fake_gemini):
     assert r.json()["intent"] == "limitation"
 
 
-def test_query_malformed_answer_returns_502(client: TestClient, fake_gemini, monkeypatch):
-    monkeypatch.setattr(gemini_client, "build_client", lambda: object())
+def test_query_malformed_answer_returns_502(client: TestClient, fake_groq, monkeypatch):
+    monkeypatch.setattr(groq_client, "build_client", lambda: object())
 
     def fake_loop(client, model, system, question, tools, handler):
         return "I made up 999 units", "get_stockout_risks", {"rows": []}
 
-    monkeypatch.setattr(gemini_client, "run_grounded_query", fake_loop)
+    monkeypatch.setattr(groq_client, "run_grounded_query", fake_loop)
     r = client.post(
         "/api/v1/helpdesk/query",
         json={"question": "stock-out?"},
@@ -250,13 +250,13 @@ def test_query_malformed_answer_returns_502(client: TestClient, fake_gemini, mon
     assert r.status_code == 502
 
 
-def test_query_gemini_down_returns_503(client: TestClient, monkeypatch):
+def test_query_groq_down_returns_503(client: TestClient, monkeypatch):
     def boom():
-        from app.core.gemini_client import GeminiUnavailableError
+        from app.core.groq_client import GroqUnavailableError
 
-        raise GeminiUnavailableError("no key")
+        raise GroqUnavailableError("no key")
 
-    monkeypatch.setattr(gemini_client, "build_client", boom)
+    monkeypatch.setattr(groq_client, "build_client", boom)
     r = client.post(
         "/api/v1/helpdesk/query",
         json={"question": "stock-out?"},
@@ -268,7 +268,7 @@ def test_query_gemini_down_returns_503(client: TestClient, monkeypatch):
 
 def test_invalid_tool_call_is_grounded(client: TestClient, monkeypatch):
     """Model picks a bad medicine → handler returns error → 200 answer, no rows."""
-    monkeypatch.setattr(gemini_client, "build_client", lambda: object())
+    monkeypatch.setattr(groq_client, "build_client", lambda: object())
     real_dispatch = _dispatch
 
     def fake_loop(client, model, system, question, tools, handler):
@@ -280,7 +280,7 @@ def test_invalid_tool_call_is_grounded(client: TestClient, monkeypatch):
             result,
         )
 
-    monkeypatch.setattr(gemini_client, "run_grounded_query", fake_loop)
+    monkeypatch.setattr(groq_client, "run_grounded_query", fake_loop)
     r = client.post(
         "/api/v1/helpdesk/query",
         json={"question": "inventory of Nope?"},
@@ -305,7 +305,7 @@ def test_bearer_jwt_authoritative_over_header(client: TestClient, monkeypatch):
         "helpdesk-test-secret",
         algorithm="HS256",
     )
-    monkeypatch.setattr(gemini_client, "build_client", lambda: object())
+    monkeypatch.setattr(groq_client, "build_client", lambda: object())
 
     def fake_loop(client, model, system, question, tools, handler):
         result = handler("get_stockout_risks", {})
@@ -315,7 +315,7 @@ def test_bearer_jwt_authoritative_over_header(client: TestClient, monkeypatch):
             result,
         )
 
-    monkeypatch.setattr(gemini_client, "run_grounded_query", fake_loop)
+    monkeypatch.setattr(groq_client, "run_grounded_query", fake_loop)
     r = client.post(
         "/api/v1/helpdesk/query",
         json={"question": "list inventory"},

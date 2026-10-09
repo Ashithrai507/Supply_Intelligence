@@ -1,7 +1,7 @@
-"""FROZEN contract models for the MedPredict Helpdesk (grounded Gemini assistant).
+"""FROZEN contract models for the MedPredict Helpdesk (grounded Groq assistant).
 
 The answer must rest on the verified rows in ``evidence``; the backend owns
-``intent``, ``data_as_of`` and ``limitations``. Gemini is only ever asked to
+``intent``, ``data_as_of`` and ``limitations``. Groq is only ever asked to
 produce ``answer`` and ``suggested_questions`` inside a JSON object.
 """
 

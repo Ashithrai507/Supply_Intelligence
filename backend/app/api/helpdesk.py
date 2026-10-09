@@ -1,7 +1,7 @@
-"""MedPredict Helpdesk API — grounded Gemini assistant (POST /helpdesk/query).
+"""MedPredict Helpdesk API — grounded Groq assistant (POST /helpdesk/query).
 
-Gemini is only ever reached through this endpoint; the frontend never holds a
-Gemini key. Scope (hospital) is resolved on the backend.
+Groq is only ever reached through this endpoint; the frontend never holds a
+Groq key. Scope (hospital) is resolved on the backend.
 """
 
 from __future__ import annotations
