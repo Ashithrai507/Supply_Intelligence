@@ -32,12 +32,12 @@ export default function ForecastAlerts() {
   if (!alerts || alerts.length === 0) return null;
 
   return (
-    <section aria-label="Forecast-driven alerts" className="rounded-2xl border border-indigo-200 bg-white p-4 shadow-sm">
-      <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-        <FlaskConical className="h-4 w-4 text-indigo-600" />
+    <section aria-label="Forecast-driven alerts" className="rounded-2xl border border-indigo-200 bg-white p-4 shadow-sm dark:bg-slate-900 dark:border-indigo-800">
+      <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
+        <FlaskConical className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
         Forecast-driven alerts (LightGBM)
       </h2>
-      <ul className="mt-2 divide-y divide-slate-100">
+      <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">
         {alerts.map((a) => (
           <li key={`${a.medicine_id}`}>
             <Link
@@ -45,7 +45,7 @@ export default function ForecastAlerts() {
               className="flex items-center justify-between py-2 hover:bg-slate-50"
             >
               <span className="text-sm font-semibold">{a.medicine_name}</span>
-              <span className="text-xs text-slate-600">
+              <span className="text-xs text-slate-600 dark:text-slate-400">
                 Stock-out expected in{" "}
                 <strong>{a.days_until_stockout != null ? `${a.days_until_stockout} days` : "—"}</strong>
                 {" · "}{a.risk_level}

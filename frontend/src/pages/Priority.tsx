@@ -24,11 +24,11 @@ const BAR_COLORS: Record<string, string> = {
 };
 
 const DIMENSIONS = [
-  { key: "patientLoad", label: "Patient Load", max: 30, color: "bg-indigo-600", text: "text-indigo-700" },
-  { key: "emergency", label: "Emergency Surge", max: 30, color: "bg-rose-600", text: "text-rose-700" },
-  { key: "stockout", label: "Stockout Imminence", max: 30, color: "bg-amber-500", text: "text-amber-700" },
-  { key: "criticality", label: "Clinical Criticality", max: 30, color: "bg-purple-600", text: "text-purple-700" },
-  { key: "alternatives", label: "No Alternative SKUs", max: 10, color: "bg-sky-600", text: "text-sky-700" },
+  { key: "patientLoad", label: "Patient Load", max: 30, color: "bg-indigo-600", text: "text-indigo-700 dark:text-indigo-300" },
+  { key: "emergency", label: "Emergency Surge", max: 30, color: "bg-rose-600", text: "text-rose-700 dark:text-rose-300" },
+  { key: "stockout", label: "Stockout Imminence", max: 30, color: "bg-amber-500", text: "text-amber-700 dark:text-amber-300" },
+  { key: "criticality", label: "Clinical Criticality", max: 30, color: "bg-purple-600", text: "text-purple-700 dark:text-purple-300" },
+  { key: "alternatives", label: "No Alternative SKUs", max: 10, color: "bg-sky-600", text: "text-sky-700 dark:text-sky-300" },
 ] as const;
 
 export default function Priority() {
@@ -69,7 +69,7 @@ export default function Priority() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500">
+      <div className="flex h-64 items-center justify-center text-sm font-semibold text-slate-500 dark:text-slate-400">
         Computing network priority scores…
       </div>
     );
@@ -77,9 +77,9 @@ export default function Priority() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm">
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-rose-900 shadow-sm dark:border-rose-800">
         <h3 className="font-bold">Could not load network priorities</h3>
-        <p className="mt-1 text-xs text-rose-700">{error}</p>
+        <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">{error}</p>
       </div>
     );
   }
@@ -89,10 +89,10 @@ export default function Priority() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {currentHospitalName} — Allocation Urgency Index
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 dark:text-slate-400">
             Network priority ranking determining urgency for incoming emergency supply redistributions.
             Scores are derived deterministically from each facility's live stock-out risk signals.
           </p>
@@ -101,19 +101,19 @@ export default function Priority() {
 
       {/* Your Organization Urgency Status Banner */}
       {myPriority && (
-        <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-white p-5 shadow-xs">
+        <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-white p-5 shadow-xs dark:border-indigo-800">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
                   Your Facility Status
                 </span>
-                <span className="text-xs font-bold text-slate-700">Rank #{myRank} of {priorities.length}</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Rank #{myRank} of {priorities.length}</span>
               </div>
-              <h3 className="text-base font-extrabold text-slate-900 mt-1">
+              <h3 className="text-base font-extrabold text-slate-900 mt-1 dark:text-slate-100">
                 {currentHospitalName} — Composite Score {myPriority.score}/100
               </h3>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-slate-600 mt-0.5 dark:text-slate-400">
                 Primary Clinical Need Driver: <strong>{myPriority.reason}</strong>
               </p>
             </div>
@@ -129,13 +129,13 @@ export default function Priority() {
       )}
 
       {/* Priority Horizontal Bar Chart */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3 dark:bg-slate-900 dark:border-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Composite Urgency Scores (0-100)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Evaluates real-time patient admissions, stockout severity, and ICU medicine criticality
             </p>
           </div>
@@ -160,15 +160,15 @@ export default function Priority() {
                 if (active && payload && payload.length) {
                   const d = payload[0].payload;
                   return (
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg">
-                      <p className="font-bold text-slate-900">{d.fullName}</p>
+                    <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg dark:bg-slate-900 dark:border-slate-800">
+                      <p className="font-bold text-slate-900 dark:text-slate-100">{d.fullName}</p>
                       <div className="mt-1 flex items-center justify-between gap-4 font-semibold">
-                        <span className="text-slate-600">Urgency Score:</span>
+                        <span className="text-slate-600 dark:text-slate-400">Urgency Score:</span>
                         <span className="text-rose-600 font-bold">{d.score} / 100</span>
                       </div>
-                      <div className="flex items-center justify-between gap-4 text-slate-500 text-[11px]">
+                      <div className="flex items-center justify-between gap-4 text-slate-500 text-[11px] dark:text-slate-400">
                         <span>Tier:</span>
-                        <span className="font-bold text-slate-700">{d.level}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{d.level}</span>
                       </div>
                     </div>
                   );
@@ -187,11 +187,11 @@ export default function Priority() {
 
       {/* Interactive Filters & Search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 text-xs">
+        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 text-xs dark:bg-slate-900 dark:border-slate-800">
           <button
             onClick={() => setLevelFilter("All")}
             className={`rounded-md px-3 py-1 font-semibold transition-colors ${
-              levelFilter === "All" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"
+              levelFilter === "All" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
             All Tiers ({priorities.length})
@@ -199,7 +199,7 @@ export default function Priority() {
           <button
             onClick={() => setLevelFilter("Critical")}
             className={`rounded-md px-3 py-1 font-semibold transition-colors ${
-              levelFilter === "Critical" ? "bg-rose-600 text-white" : "text-rose-700 hover:bg-rose-50"
+              levelFilter === "Critical" ? "bg-rose-600 text-white" : "text-rose-700 hover:bg-rose-50 dark:text-rose-300"
             }`}
           >
             Critical
@@ -207,7 +207,7 @@ export default function Priority() {
           <button
             onClick={() => setLevelFilter("High")}
             className={`rounded-md px-3 py-1 font-semibold transition-colors ${
-              levelFilter === "High" ? "bg-amber-600 text-white" : "text-amber-800 hover:bg-amber-50"
+              levelFilter === "High" ? "bg-amber-600 text-white" : "text-amber-800 hover:bg-amber-50 dark:text-amber-200"
             }`}
           >
             High
@@ -215,7 +215,7 @@ export default function Priority() {
           <button
             onClick={() => setLevelFilter("Medium")}
             className={`rounded-md px-3 py-1 font-semibold transition-colors ${
-              levelFilter === "Medium" ? "bg-yellow-600 text-white" : "text-yellow-800 hover:bg-yellow-50"
+              levelFilter === "Medium" ? "bg-yellow-600 text-white" : "text-yellow-800 hover:bg-yellow-50 dark:text-yellow-200"
             }`}
           >
             Medium
@@ -223,18 +223,18 @@ export default function Priority() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             placeholder="Search facility or clinical driver..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-white pl-8 pr-7 py-1.5 text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-white pl-8 pr-7 py-1.5 text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all dark:bg-slate-900 dark:text-slate-200 dark:border-slate-800"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:text-slate-500"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -255,11 +255,11 @@ export default function Priority() {
                 isMyHospital
                   ? "border-indigo-400 bg-gradient-to-r from-indigo-50/50 via-white to-indigo-50/20 ring-1 ring-indigo-400/50"
                   : isCriticalTier
-                  ? "border-rose-200 bg-gradient-to-r from-white via-rose-50/20 to-rose-50/40"
-                  : "border-slate-200 bg-white"
+                  ? "border-rose-200 bg-gradient-to-r from-white via-rose-50/20 to-rose-50/40 dark:border-rose-800"
+                  : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800"
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-sm text-white shadow-sm ${
@@ -274,14 +274,14 @@ export default function Priority() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 text-sm">{p.hospital}</h3>
+                      <h3 className="font-bold text-slate-900 text-sm dark:text-slate-100">{p.hospital}</h3>
                       {isMyHospital && (
-                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-2 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-200">
+                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-2 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-200 dark:border-indigo-800">
                           Your Facility
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-rose-700 font-medium mt-0.5">
+                    <p className="text-xs text-rose-700 font-medium mt-0.5 dark:text-rose-300">
                       Clinical Driver: <strong>{p.reason}</strong>
                     </p>
                   </div>
@@ -289,8 +289,8 @@ export default function Priority() {
 
                 <div className="flex items-center gap-3 self-end sm:self-auto">
                   <div className="text-right">
-                    <span className="text-2xl font-black text-slate-900">{p.score}</span>
-                    <span className="text-xs text-slate-400 font-semibold">/100</span>
+                    <span className="text-2xl font-black text-slate-900 dark:text-slate-100">{p.score}</span>
+                    <span className="text-xs text-slate-400 font-semibold dark:text-slate-500">/100</span>
                   </div>
                   <RiskBadge
                     level={p.level === "Critical" ? "Critical" : p.level === "High" ? "High" : "Medium"}
@@ -301,7 +301,7 @@ export default function Priority() {
 
               {/* Multi-factor Score Breakdown */}
               <div className="mt-4 space-y-2">
-                <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <span>Dimension Contribution Breakdown:</span>
                   <span>Points (per-dimension max)</span>
                 </div>
@@ -312,12 +312,12 @@ export default function Priority() {
                     const pct = Math.min(100, Math.round((score / d.max) * 100));
 
                     return (
-                      <div key={d.key} className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5">
+                      <div key={d.key} className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:bg-slate-900/70 dark:border-slate-800">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium text-slate-600 text-[11px]">{d.label}</span>
-                          <span className="font-bold text-slate-900 font-mono text-[11px]">{score}/{d.max}</span>
+                          <span className="font-medium text-slate-600 text-[11px] dark:text-slate-400">{d.label}</span>
+                          <span className="font-bold text-slate-900 font-mono text-[11px] dark:text-slate-100">{score}/{d.max}</span>
                         </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                           <div
                             className={`h-full rounded-full ${d.color} transition-all duration-300`}
                             style={{ width: `${pct}%` }}

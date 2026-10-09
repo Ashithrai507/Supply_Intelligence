@@ -3,9 +3,12 @@ import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   HeartPulse,
   Menu,
+  Moon,
+  Sun,
   X,
 } from "lucide-react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useTheme } from "./context/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import Expiry from "./pages/Expiry";
 import Forecast from "./pages/Forecast";
@@ -35,6 +38,21 @@ const NAV_LINKS: NavLinkItem[] = [
   { to: "/helpdesk", label: "Helpdesk" },
 ];
 
+function ThemeToggle() {
+  const { isDark, toggle } = useTheme();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+    >
+      {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+    </button>
+  );
+}
+
 function AuthenticatedApp() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,9 +63,9 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-indigo-500 selection:text-white dark:bg-slate-950 dark:text-slate-200">
       {/* Clean, Simple Top Menu Bar */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             {/* Clean Logo */}
@@ -55,7 +73,7 @@ function AuthenticatedApp() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs transition-transform group-hover:scale-105">
                 <HeartPulse className="h-4.5 w-4.5" />
               </div>
-              <span className="text-base font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+              <span className="text-base font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors dark:text-white dark:group-hover:text-indigo-400">
                 MediPulse
               </span>
             </Link>
@@ -70,8 +88,8 @@ function AuthenticatedApp() {
                   className={({ isActive }) =>
                     `rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                     }`
                   }
                 >
@@ -80,15 +98,16 @@ function AuthenticatedApp() {
               ))}
             </nav>
 
-            {/* Header Right: Clean Profile Menu & Mobile Toggle */}
+            {/* Header Right: Theme Toggle, Profile Menu & Mobile Toggle */}
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <UserProfileMenu />
 
               {/* Mobile Menu Button */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                className="md:hidden rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -99,7 +118,7 @@ function AuthenticatedApp() {
 
         {/* Mobile Navigation Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-100 bg-white px-4 py-2 shadow-lg">
+          <div className="md:hidden border-t border-slate-100 bg-white px-4 py-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
             <div className="space-y-1">
               {NAV_LINKS.map((item) => {
                 const isActive =
@@ -114,8 +133,8 @@ function AuthenticatedApp() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                        : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                     }`}
                   >
                     {item.label}
@@ -143,7 +162,7 @@ function AuthenticatedApp() {
       </main>
 
       {/* Clean, Simple Footer */}
-      <footer className="mt-auto border-t border-slate-200 bg-white py-3 text-xs text-slate-500">
+      <footer className="mt-auto border-t border-slate-200 bg-white py-3 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
             <strong className="text-slate-700">{user.name}</strong> • Institutional Workspace

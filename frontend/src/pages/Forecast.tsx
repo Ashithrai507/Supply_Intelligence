@@ -45,6 +45,7 @@ import {
   type ProcurementRecommendation,
   type ScenarioResponse,
 } from "../api/forecast";
+import { useTheme } from "../context/ThemeContext";
 
 const USE_MOCK = (import.meta.env.VITE_USE_MOCK as string | undefined) === "true";
 
@@ -52,10 +53,10 @@ const HORIZONS = [7, 14, 30];
 const SURGE_OPTIONS = [0, 20, 40, 60];
 
 const RISK_STYLES: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-800 border-red-300",
-  HIGH: "bg-orange-100 text-orange-800 border-orange-300",
-  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  LOW: "bg-green-100 text-green-800 border-green-300",
+  CRITICAL: "bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-200 dark:border-red-700",
+  HIGH: "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-700",
+  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-700",
+  LOW: "bg-green-100 text-green-800 border-green-300 dark:bg-green-950 dark:text-green-200 dark:border-green-700",
 };
 
 interface ChartPoint {
@@ -77,11 +78,14 @@ function riskMessage(med: string, outlook: InventoryOutlook): string {
   );
 }
 
-const cardCls = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
-const labelCls = "text-xs font-medium uppercase tracking-wide text-slate-500";
+const cardCls = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800";
+const labelCls = "text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400";
 
 export default function Forecast() {
   const [searchParams] = useSearchParams();
+  const { isDark } = useTheme();
+  // Chart palette adapts: near-black actuals vanish on dark surfaces.
+  const actualStroke = isDark ? "#e2e8f0" : "#1f2937";
   const [hospitals, setHospitals] = useState<HospitalOption[]>([]);
   const [medicines, setMedicines] = useState<MedicineOption[]>([]);
   const [hospitalId, setHospitalId] = useState("");
@@ -196,7 +200,7 @@ export default function Forecast() {
 
   if (loading) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-600">
+      <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-600 dark:text-slate-400">
         <Loader2 className="h-6 w-6 animate-spin" />
         <p>Generating demand forecast…</p>
       </div>
@@ -205,9 +209,9 @@ export default function Forecast() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-center">
-        <p className="font-semibold text-red-800">Unable to load forecast.</p>
-        <p className="mt-1 text-sm text-red-700">{error} — is the backend running?</p>
+      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-center dark:border-red-700">
+        <p className="font-semibold text-red-800 dark:text-red-200">Unable to load forecast.</p>
+        <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error} — is the backend running?</p>
         <button
           type="button"
           onClick={() => setReloadKey((k) => k + 1)}
@@ -221,7 +225,7 @@ export default function Forecast() {
 
   if (!forecast || !outlook || forecast.forecast.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-600">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
         Insufficient historical demand data to generate a reliable forecast.
       </div>
     );
@@ -238,7 +242,7 @@ export default function Forecast() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold">Demand Forecast</h2>
-          <p className="text-sm text-slate-500">AI-powered medicine demand prediction</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">AI-powered medicine demand prediction</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <select
@@ -274,7 +278,7 @@ export default function Forecast() {
         </div>
       </div>
       {USE_MOCK && (
-        <p className="rounded border border-amber-300 bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+        <p className="rounded border border-amber-300 bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700">
           Demo data — not model output (VITE_USE_MOCK is on)
         </p>
       )}
@@ -282,9 +286,9 @@ export default function Forecast() {
       {/* Hero card */}
       <div className={cardCls}>
         <div className="flex items-center gap-2">
-          <Pill className="h-5 w-5 text-indigo-600" />
+          <Pill className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           <h3 className="text-lg font-bold">{outlook.medicine_name}</h3>
-          <span className="text-xs text-slate-500">{outlook.category} · {outlook.criticality_level}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{outlook.category} · {outlook.criticality_level}</span>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div><p className={labelCls}>Current stock</p><p className="text-lg font-bold">{outlook.usable_inventory.toLocaleString()} {outlook.unit}</p></div>
@@ -298,9 +302,9 @@ export default function Forecast() {
       {/* Main chart */}
       <div className={cardCls}>
         <h3 className="mb-1 flex items-center gap-2 text-sm font-bold">
-          <LineChartIcon className="h-4 w-4 text-indigo-600" /> Historical vs forecast demand
+          <LineChartIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Historical vs forecast demand
         </h3>
-        <p className="mb-2 text-xs text-slate-500">Solid = actual consumption · Dashed = LightGBM prediction</p>
+        <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">Solid = actual consumption · Dashed = LightGBM prediction</p>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -309,7 +313,7 @@ export default function Forecast() {
             <Tooltip />
             <Legend />
             <ReferenceLine x={todayLabel} stroke="#64748b" strokeDasharray="4 3" label={{ value: "TODAY", fontSize: 11, fill: "#64748b" }} />
-            <Line type="monotone" dataKey="actual" name="Actual used" stroke="#1f2937" strokeWidth={2} dot={false} connectNulls />
+            <Line type="monotone" dataKey="actual" name="Actual used" stroke={actualStroke} strokeWidth={2} dot={false} connectNulls />
             <Line type="monotone" dataKey="predicted" name="Forecast" stroke="#4f46e5" strokeWidth={2} strokeDasharray="6 4" dot={false} connectNulls />
           </LineChart>
         </ResponsiveContainer>
@@ -320,8 +324,8 @@ export default function Forecast() {
         <div className={cardCls}>
           <h3 className="mb-2 text-sm font-bold">Forecast table</h3>
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-xs text-slate-500"><th className="py-1">Date</th><th className="py-1 text-right">Predicted demand</th></tr></thead>
-            <tbody className="divide-y divide-slate-100">
+            <thead><tr className="text-left text-xs text-slate-500 dark:text-slate-400"><th className="py-1">Date</th><th className="py-1 text-right">Predicted demand</th></tr></thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {forecast.forecast.map((f) => (
                 <tr key={f.date}><td className="py-1">{formatShortDate(f.date)}</td><td className="py-1 text-right font-medium">{f.predicted_demand.toFixed(1)}</td></tr>
               ))}
@@ -333,10 +337,10 @@ export default function Forecast() {
           <div>
             <h3 className="mb-2 text-sm font-bold">Inventory outlook</h3>
             <dl className="grid grid-cols-2 gap-2 text-sm">
-              <dt className="text-slate-500">Current stock</dt><dd className="text-right font-semibold">{outlook.usable_inventory.toLocaleString()} {outlook.unit}</dd>
-              <dt className="text-slate-500">Projected stock-out</dt><dd className="text-right font-semibold">{outlook.projected_stockout_date ?? "—"}</dd>
-              <dt className="text-slate-500">Days until stock-out</dt><dd className="text-right font-semibold">{outlook.days_until_stockout ?? "—"}</dd>
-              <dt className="text-slate-500">Lead time</dt><dd className="text-right font-semibold">{outlook.supplier_lead_time_days} days</dd>
+              <dt className="text-slate-500 dark:text-slate-400">Current stock</dt><dd className="text-right font-semibold">{outlook.usable_inventory.toLocaleString()} {outlook.unit}</dd>
+              <dt className="text-slate-500 dark:text-slate-400">Projected stock-out</dt><dd className="text-right font-semibold">{outlook.projected_stockout_date ?? "—"}</dd>
+              <dt className="text-slate-500 dark:text-slate-400">Days until stock-out</dt><dd className="text-right font-semibold">{outlook.days_until_stockout ?? "—"}</dd>
+              <dt className="text-slate-500 dark:text-slate-400">Lead time</dt><dd className="text-right font-semibold">{outlook.supplier_lead_time_days} days</dd>
             </dl>
           </div>
           <div>
@@ -361,30 +365,30 @@ export default function Forecast() {
 
       {/* Procurement recommendation */}
       <div className={cardCls}>
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><ShoppingCart className="h-4 w-4 text-indigo-600" /> Recommended action</h3>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><ShoppingCart className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Recommended action</h3>
         {recommendation ? (
           <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div><p className={labelCls}>Medicine</p><p className="font-semibold">{recommendation.medicine_name}</p></div>
             <div><p className={labelCls}>Recommended order</p><p className="font-semibold">{recommendation.recommended_quantity.toLocaleString()} units</p></div>
             <div><p className={labelCls}>Supplier</p><p className="font-semibold">{recommendation.source_name}</p></div>
             <div><p className={labelCls}>Expected delivery</p><p className="font-semibold">{recommendation.expected_delivery_date} ({recommendation.lead_time_days} days)</p></div>
-            <p className="text-xs text-slate-600 sm:col-span-2 lg:col-span-4">Reason: {recommendation.reason}</p>
+            <p className="text-xs text-slate-600 sm:col-span-2 lg:col-span-4 dark:text-slate-400">Reason: {recommendation.reason}</p>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">No order needed — usable stock covers lead-time demand plus safety buffer.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No order needed — usable stock covers lead-time demand plus safety buffer.</p>
         )}
       </div>
 
       {/* Scenario runner */}
       <div className={cardCls}>
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><FlaskConical className="h-4 w-4 text-indigo-600" /> Demand surge scenario</h3>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><FlaskConical className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Demand surge scenario</h3>
         <div className="flex flex-wrap items-center gap-2">
           {SURGE_OPTIONS.map((pct) => (
             <button
               key={pct}
               type="button"
               onClick={() => setSurgePct(pct)}
-              className={`rounded px-3 py-1 text-sm font-semibold ${surgePct === pct ? "bg-slate-900 text-white" : "border border-slate-300 hover:bg-slate-100"}`}
+              className={`rounded px-3 py-1 text-sm font-semibold ${surgePct === pct ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "border border-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
             >
               +{pct}%
             </button>
@@ -398,7 +402,7 @@ export default function Forecast() {
             {scenarioLoading ? "Running…" : "Run Scenario"}
           </button>
         </div>
-        {scenarioError && <p className="mt-2 text-sm text-red-700">{scenarioError}</p>}
+        {scenarioError && <p className="mt-2 text-sm text-red-700 dark:text-red-300">{scenarioError}</p>}
         {scenario && (
           <div className="mt-3">
             <div className="grid gap-3 sm:grid-cols-3">
@@ -411,14 +415,14 @@ export default function Forecast() {
                   after: `${scenario.simulated_recommended_order.toLocaleString()} units`,
                 },
               ].map((c) => (
-                <div key={c.label} className="rounded-lg border border-slate-200 p-3">
+                <div key={c.label} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                   <p className={labelCls}>{c.label}</p>
-                  <p className="mt-1 text-sm"><span className="text-slate-500">Before:</span> <strong>{c.before}</strong></p>
-                  <p className="text-sm"><span className="text-slate-500">After +{scenario.demand_increase_pct}%:</span> <strong className="text-indigo-700">{c.after}</strong></p>
+                  <p className="mt-1 text-sm"><span className="text-slate-500 dark:text-slate-400">Before:</span> <strong>{c.before}</strong></p>
+                  <p className="text-sm"><span className="text-slate-500 dark:text-slate-400">After +{scenario.demand_increase_pct}%:</span> <strong className="text-indigo-700 dark:text-indigo-300">{c.after}</strong></p>
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-xs text-slate-600"><Truck className="mr-1 inline h-3 w-3" />{scenario.summary}</p>
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400"><Truck className="mr-1 inline h-3 w-3" />{scenario.summary}</p>
           </div>
         )}
       </div>
@@ -428,25 +432,25 @@ export default function Forecast() {
         <div className={cardCls}>
           <h3 className="mb-2 text-sm font-bold">AI forecasting model</h3>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-slate-500">Model</dt><dd className="text-right font-semibold">{forecast.model}</dd>
-            <dt className="text-slate-500">Version</dt><dd className="text-right font-semibold">{forecast.model_version}</dd>
-            <dt className="text-slate-500">Target</dt><dd className="text-right font-semibold">Daily medicine consumption</dd>
-            <dt className="text-slate-500">Forecast horizon</dt><dd className="text-right font-semibold">{forecast.horizon_days} days</dd>
+            <dt className="text-slate-500 dark:text-slate-400">Model</dt><dd className="text-right font-semibold">{forecast.model}</dd>
+            <dt className="text-slate-500 dark:text-slate-400">Version</dt><dd className="text-right font-semibold">{forecast.model_version}</dd>
+            <dt className="text-slate-500 dark:text-slate-400">Target</dt><dd className="text-right font-semibold">Daily medicine consumption</dd>
+            <dt className="text-slate-500 dark:text-slate-400">Forecast horizon</dt><dd className="text-right font-semibold">{forecast.horizon_days} days</dd>
           </dl>
         </div>
         <div className={cardCls}>
           <h3 className="mb-2 text-sm font-bold">Model performance</h3>
           {hasMetrics ? (
             <table className="w-full text-sm">
-              <thead><tr className="text-left text-xs text-slate-500"><th></th><th className="text-right">LightGBM</th><th className="text-right">Baseline (7-day MA)</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">
+              <thead><tr className="text-left text-xs text-slate-500 dark:text-slate-400"><th></th><th className="text-right">LightGBM</th><th className="text-right">Baseline (7-day MA)</th></tr></thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr><td>MAE</td><td className="text-right font-medium">{metrics.mae?.toFixed(2)}</td><td className="text-right">{baseline.mae?.toFixed(2) ?? "—"}</td></tr>
                 <tr><td>RMSE</td><td className="text-right font-medium">{metrics.rmse?.toFixed(2)}</td><td className="text-right">{baseline.rmse?.toFixed(2) ?? "—"}</td></tr>
                 <tr><td>WAPE</td><td className="text-right font-medium">{((metrics.wape ?? 0) * 100).toFixed(2)}%</td><td className="text-right">{baseline.wape != null ? `${(baseline.wape * 100).toFixed(2)}%` : "—"}</td></tr>
               </tbody>
             </table>
           ) : (
-            <p className="text-sm text-slate-500">Metrics not returned by the backend.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Metrics not returned by the backend.</p>
           )}
         </div>
       </div>
