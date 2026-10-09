@@ -1,6 +1,7 @@
 {
   "$schema": "https://schema.railpack.com",
   "deploy": {
-    "aptPackages": ["...", "libgomp1"]
+    "aptPackages": ["...", "libgomp1"],
+    "startCommand": ".venv/bin/uvicorn app.main:app --host 0.0.0.0"
   }
 }
