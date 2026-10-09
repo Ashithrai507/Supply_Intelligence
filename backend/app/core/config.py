@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # Helpdesk (grounded Groq assistant)
     GROQ_API_KEY: str = ""  # Groq console key — backend only, never exposed
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-20b"
 
     # App
     CORS_ORIGINS: str = "http://localhost:5173"
