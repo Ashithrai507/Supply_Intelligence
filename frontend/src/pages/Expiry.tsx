@@ -19,6 +19,8 @@ import { getHospitalsList, getInventoryRows, getStockoutRisks } from "../api/med
 import type { StockoutRiskItem } from "../api/medpredict";
 import type { HospitalOption } from "../api/forecast";
 import type { InventoryRow } from "../api/client";
+import { riskOf } from "../api/client";
+import { addPlannedTransfer } from "../api/plannedTransfers";
 import { useAuth } from "../context/AuthContext";
 import RiskBadge from "../components/RiskBadge";
 
@@ -81,10 +83,12 @@ export default function Expiry() {
     return Math.max(0, redistributeRow.surplus - sent);
   }
 
-  function sendTo(hospitalId: string, hospitalName: string, dailyDemand: number) {
+  function sendTo(c: StockoutRiskItem, hospitalName: string) {
     if (!redistributeRow) return;
     const remaining = remainingSurplus();
-    const wanted = Number(qtyInputs[hospitalId] || Math.min(remaining, Math.ceil(dailyDemand * 7)));
+    const wanted = Number(
+      qtyInputs[c.hospital_id] || Math.min(remaining, Math.ceil(c.daily_demand * 7)),
+    );
     if (!Number.isFinite(wanted) || wanted <= 0) {
       setSendError("Enter a positive quantity.");
       return;
@@ -94,8 +98,24 @@ export default function Expiry() {
       return;
     }
     setSendError(null);
-    setPlanned((prev) => [...prev, { to_id: hospitalId, to: hospitalName, qty: Math.floor(wanted) }]);
-    setQtyInputs((prev) => ({ ...prev, [hospitalId]: "" }));
+    const qty = Math.floor(wanted);
+    setPlanned((prev) => [...prev, { to_id: c.hospital_id, to: hospitalName, qty }]);
+    setQtyInputs((prev) => ({ ...prev, [c.hospital_id]: "" }));
+    addPlannedTransfer({
+      id: `manual-${Date.now()}`,
+      from_id: redistributeRow.hospital_id,
+      from: redistributeRow.hospital,
+      to_id: c.hospital_id,
+      to: hospitalName,
+      medicine: redistributeRow.medicine,
+      quantity: qty,
+      score: Math.min(96, 55 + Math.round(qty / 50)),
+      reasons: [
+        `Manual redistribution from Expiry page — ${redistributeRow.surplus.toLocaleString()} surplus units expiring in ${redistributeRow.dte} days.`,
+        `${hospitalName} has ${c.days_until_stockout != null ? `${c.days_until_stockout.toFixed(1)} days of cover` : "unknown cover"} (${c.risk_level}).`,
+      ],
+      date: new Date().toISOString().slice(0, 10),
+    });
   }
 
   useEffect(() => {
@@ -404,7 +424,7 @@ export default function Expiry() {
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-4" onClick={() => setRedistributeRow(null)}>
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-gray-200 bg-white p-5 shadow-xl"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg border border-gray-200 bg-white p-5 shadow-xl"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -425,21 +445,49 @@ export default function Expiry() {
               </button>
             </div>
 
-            <p className="mt-2 rounded bg-gray-50 px-2 py-1 text-sm">
-              Remaining to place: <strong>{remainingSurplus().toLocaleString()}</strong> units
-            </p>
+            <div className="mt-3 grid gap-4 md:grid-cols-5">
+              <div className="md:col-span-2">
+                <h4 className="mb-2 font-semibold">Surplus at {redistributeRow.hospital}</h4>
+                <div className="rounded border border-gray-200 bg-gray-50 p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600">Extra units</p>
+                    <RiskBadge level={riskOf(redistributeRow.days_left)} />
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {redistributeRow.surplus.toLocaleString()}
+                  </p>
+                  <dl className="mt-2 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <dt className="text-gray-500">Current stock</dt>
+                      <dd className="font-medium">{redistributeRow.current_quantity.toLocaleString()}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-gray-500">Expected use</dt>
+                      <dd className="font-medium">{redistributeRow.expectedUse.toLocaleString()}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-gray-500">Expires in</dt>
+                      <dd className="font-medium">{redistributeRow.dte} days</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-gray-500">Remaining to place</dt>
+                      <dd className="font-semibold">{remainingSurplus().toLocaleString()}</dd>
+                    </div>
+                  </dl>
+                </div>
+                {planned.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {planned.map((p, i) => (
+                      <li key={`${p.to_id}-${i}`} className="rounded bg-green-50 px-2 py-1 text-sm text-green-800">
+                        {p.qty.toLocaleString()} units → {p.to} · saved to Transfers
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-            {planned.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {planned.map((p, i) => (
-                  <li key={`${p.to_id}-${i}`} className="rounded bg-green-50 px-2 py-1 text-sm text-green-800">
-                    {p.qty.toLocaleString()} units → {p.to}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <h4 className="mb-2 mt-4 font-semibold">Hospitals with demand for {redistributeRow.medicine}</h4>
+              <div className="md:col-span-3">
+                <h4 className="mb-2 font-semibold">Top 3 hospitals with demand</h4>
             {candLoading ? (
               <p className="text-sm text-gray-600">Finding demand across the network…</p>
             ) : candidates.length === 0 ? (
@@ -448,7 +496,7 @@ export default function Expiry() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {candidates.map((c) => {
+                {candidates.slice(0, 3).map((c) => {
                   const suggested = Math.min(
                     remainingSurplus(),
                     Math.ceil(c.daily_demand * 7),
@@ -484,7 +532,7 @@ export default function Expiry() {
                         />
                         <button
                           type="button"
-                          onClick={() => sendTo(c.hospital_id, hospitalName, c.daily_demand)}
+                          onClick={() => sendTo(c, hospitalName)}
                           className="rounded bg-gray-900 px-3 py-1 text-sm font-semibold text-white hover:bg-gray-700"
                         >
                           Send
@@ -496,6 +544,13 @@ export default function Expiry() {
               </ul>
             )}
             {sendError && <p className="mt-2 text-sm text-red-700">{sendError}</p>}
+            {candidates.length > 3 && (
+              <p className="mt-2 text-xs text-gray-500">
+                +{candidates.length - 3} more hospitals with demand — showing top 3 most urgent.
+              </p>
+            )}
+              </div>
+            </div>
           </div>
         </div>
       )}

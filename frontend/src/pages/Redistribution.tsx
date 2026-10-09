@@ -18,6 +18,7 @@ import {
   YAxis,
 } from "recharts";
 import { getTransferRows, type TransferRow } from "../api/medpredict";
+import { loadPlannedTransfers } from "../api/plannedTransfers";
 import { useAuth } from "../context/AuthContext";
 
 export default function Redistribution() {
@@ -38,7 +39,20 @@ export default function Redistribution() {
     setLoading(true);
     setError(null);
     getTransferRows(user.id)
-      .then(setTransfers)
+      .then((rows) => {
+        const manual: TransferRow[] = loadPlannedTransfers().map((p) => ({
+          id: p.id,
+          from_id: p.from_id,
+          from: p.from,
+          to_id: p.to_id,
+          to: p.to,
+          medicine: p.medicine,
+          quantity: p.quantity,
+          score: p.score,
+          reasons: p.reasons,
+        }));
+        setTransfers([...manual, ...rows]);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, [user?.id]);
